@@ -1,16 +1,16 @@
 <?php
 
-namespace SbscPackages\Authentication\Http\Controllers\v1\Auth;
+namespace SbscPackage\Authentication\Http\Controllers\v1\Auth;
 
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
-use SbscPackages\Authentication\Http\Requests\CreateUserRequest;
-use SbscPackages\Authentication\Models\User;
-use SbscPackages\Authentication\Responser\JsonResponser;
-use SbscPackages\Authentication\Helpers\ProcessAuditLog;
+use SbscPackage\Authentication\Http\Requests\CreateUserRequest;
+use SbscPackage\Authentication\Models\User;
+use SbscPackage\Authentication\Responser\JsonResponser;
+use SbscPackage\Authentication\Helpers\ProcessAuditLog;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use SbscPackages\Authentication\Notifications\PendingUserNotification;
+use SbscPackage\Authentication\Notifications\PendingUserNotification;
 use Illuminate\Support\Str;
 use Notification;
 use Carbon\Carbon;
