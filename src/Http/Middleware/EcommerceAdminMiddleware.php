@@ -1,6 +1,6 @@
 <?php
 
-namespace SbscPackages\Authentication\Http\Middleware;
+namespace SbscPackage\Ecommerce\Http\Middleware;
 
 use Closure;
 

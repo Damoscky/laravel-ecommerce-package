@@ -30,7 +30,7 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
         return "Ecommerce Cache is cleared";
     });
     // 'middleware' => ["core", "admin"]
-    Route::group(['prefix' => 'admin', "namespace" => "v1\Admin", ], function () {
+    Route::group(['prefix' => 'admin', "namespace" => "v1\Admin", 'middleware' => ["auth:api", "ecommerceadmin"]], function () {
 
         //Logout Route
         // Route::get('auth/logout', [LoginController::class, 'logout']);
