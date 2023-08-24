@@ -2,7 +2,7 @@
 
 namespace SbscPackages\Authentication\Http\Controllers\v1\Auth;
 
-use SbscPackages\Authentication\Http\Controllers\Controller;
+use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use SbscPackages\Authentication\Http\Requests\CreateUserRequest;
 use SbscPackages\Authentication\Models\User;
@@ -16,7 +16,7 @@ use Notification;
 use Carbon\Carbon;
 
 
-class RegisterController extends Controller
+class RegisterController extends BaseController
 {
     
     public function store(CreateUserRequest $request)
