@@ -1,5 +1,5 @@
 {
-	"name": "sbscpackage/authentication",
+	"name": "sbscphp/authentication",
 	"description": "Adds the authentication & user package to package.app",
 	"type": "library",
 	"authors": [
