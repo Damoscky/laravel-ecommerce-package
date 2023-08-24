@@ -21,25 +21,62 @@ class PermissionsTableSeeder extends Seeder
             [
                 'name'        => 'Can View Users',
                 'slug'        => 'view.users',
-                'description' => 'Can view users',
+                'description' => 'User Management',
                 'model'       => 'Permission',
             ],
             [
                 'name'        => 'Can Create Users',
                 'slug'        => 'create.users',
-                'description' => 'Can create new users',
+                'description' => 'User Management',
                 'model'       => 'Permission',
             ],
             [
                 'name'        => 'Can Edit Users',
                 'slug'        => 'edit.users',
-                'description' => 'Can edit users',
+                'description' => 'User Management',
                 'model'       => 'Permission',
             ],
             [
                 'name'        => 'Can Delete Users',
                 'slug'        => 'delete.users',
-                'description' => 'Can delete users',
+                'description' => 'User Management',
+                'model'       => 'Permission',
+            ],
+
+            [
+                'name'        => 'Can Access Category',
+                'slug'        => 'access.category',
+                'description' => 'Category Management',
+                'model'       => 'Permission',
+            ],
+            [
+                'name'        => 'Can Manage Category',
+                'slug'        => 'manage.category',
+                'description' => 'Category Management',
+                'model'       => 'Permission',
+            ],
+            [
+                'name'        => 'Can Create Product',
+                'slug'        => 'create.product',
+                'description' => 'Product Management',
+                'model'       => 'Permission',
+            ],
+            [
+                'name'        => 'Can Delete Product',
+                'slug'        => 'delete.product',
+                'description' => 'Product Management',
+                'model'       => 'Permission',
+            ],
+            [
+                'name'        => 'Can Edit Product',
+                'slug'        => 'edit.product',
+                'description' => 'Product Management',
+                'model'       => 'Permission',
+            ],
+            [
+                'name'        => 'Can view Product',
+                'slug'        => 'view.product',
+                'description' => 'Product Management',
                 'model'       => 'Permission',
             ],
         ];

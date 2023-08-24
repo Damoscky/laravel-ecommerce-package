@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\v1\Auth\RegisterController;
-use App\Http\Controllers\v1\Auth\LoginController;
+use SbscPackage\Authentication\Http\Controllers\v1\Auth\RegisterController;
+use SbscPackage\Authentication\Http\Controllers\v1\Auth\LoginController;
+use SbscPackage\Authentication\Http\Controllers\v1\File\FileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
@@ -33,6 +34,12 @@ Route::group(["prefix" => "v1"], function () {
         Route::post('register', [RegisterController::class, 'store']);
         Route::post('login', [LoginController::class, 'login']);
     });
+    
+     //File Upload
+     Route::group(["prefix" => "file"], function () {
+        Route::post('binary/single/upload', [FileController::class, 'singleBinaryFileUpload']);
+    });
+
 
     Route::group(['middleware' => ['auth:api', 'core']], function () {
 
