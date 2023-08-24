@@ -1,8 +1,8 @@
 <?php
 
-namespace SbscPackage\Authentication\Helpers;
+namespace SbscPackage\Ecommerce\Helpers;
 
-use SbscPackage\Authentication\Models\AuditLog;
+use SbscPackage\Ecommerce\Models\AuditLog;
 
 class ProcessAuditLog {
 

@@ -1,12 +1,12 @@
 <?php
 
-namespace SbscPackage\Authentication;
+namespace SbscPackage\Ecommerce;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 
-class AuthenticationServiceProvider extends ServiceProvider
+class EcommerceServiceProvider extends ServiceProvider
 {
 	public function register()
 	{
@@ -15,8 +15,6 @@ class AuthenticationServiceProvider extends ServiceProvider
 
 	public function boot()
 	{
-		Artisan::call('vendor:publish --tag=laravelroles');
-		Artisan::call('vendor:publish --provider="Tymon\JWTAuth\Providers\LaravelServiceProvider"');
 		$this->registerRoutes();
 		$this->registerViews();
 		$this->loadMigrationsFrom(__DIR__ . '/../database/migrations');

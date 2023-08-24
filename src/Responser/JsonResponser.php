@@ -1,6 +1,6 @@
 <?php
 
-namespace SbscPackage\Authentication\Responser;
+namespace SbscPackage\Ecommerce\Responser;
 
 use Illuminate\Http\JsonResponse;
 

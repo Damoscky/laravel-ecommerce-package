@@ -1,6 +1,6 @@
 {
-	"name": "sbscphp/authentication",
-	"description": "Adds the authentication & user package to package.app",
+	"name": "sbscphp/ecommerce",
+	"description": "Adds the ecommerce package to package.app",
 	"type": "library",
 	"authors": [
 		{
@@ -14,21 +14,21 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"SbscPackage\\Authentication\\": "src",
-			"SbscPackages\\Authentication\\Database\\": "database/"
+			"SbscPackage\\Ecommerce\\": "src",
+			"SbscPackages\\Ecommerce\\Database\\": "database/"
 		}
 	},
 	"repositories": [
 		{
 			"type": "vcs", 
-			"url":  "git@github.com:sbscphp/authentication.git"
+			"url":  "git@github.com:sbscphp/ecommerce.git"
 		}
 	 ],
 
 	"extra": {
 		"laravel": {
 			"providers": [
-				"SbscPackage\\Authentication\\AuthenticationServiceProvider"
+				"SbscPackage\\Ecommerce\\EcommerceServiceProvider"
 			]
 		}
 	}

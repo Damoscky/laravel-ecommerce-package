@@ -1,6 +1,6 @@
 <?php
 
-namespace SbscPackage\Authentication\Notifications;
+namespace SbscPackage\Ecommerce\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

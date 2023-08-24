@@ -1,1 +1,1 @@
-# SBSC - Authentication & User Package
+# SBSC - Ecommerce Package
