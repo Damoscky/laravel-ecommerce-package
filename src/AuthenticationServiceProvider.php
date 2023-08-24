@@ -1,6 +1,6 @@
 <?php
 
-namespace SbscPackages\Authentication;
+namespace SbscPackage\Authentication;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
