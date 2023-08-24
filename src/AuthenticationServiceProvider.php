@@ -16,7 +16,7 @@ class AuthenticationServiceProvider extends ServiceProvider
 	public function boot()
 	{
 		Artisan::call('vendor:publish --tag=laravelroles');
-		Arisan::call('vendor:publish --provider="Tymon\JWTAuth\Providers\LaravelServiceProvider"');
+		Artisan::call('vendor:publish --provider="Tymon\JWTAuth\Providers\LaravelServiceProvider"');
 		$this->registerRoutes();
 		$this->registerViews();
 		$this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
