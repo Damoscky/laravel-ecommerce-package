@@ -1,6 +1,6 @@
 <?php
 
-use SbscPackage\Authentication\Http\Controllers\v1\Auth\RegisterController;
+// use SbscPackage\Authentication\Http\Controllers\v1\Auth\RegisterController;
 use SbscPackage\Authentication\Http\Controllers\v1\Auth\LoginController;
 use SbscPackage\Authentication\Http\Controllers\v1\File\FileController;
 use Illuminate\Http\Request;
