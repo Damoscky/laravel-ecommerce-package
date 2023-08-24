@@ -22,37 +22,11 @@ use Illuminate\Support\Facades\Artisan;
 //     return $request->user();
 // });
 
-Route::group(["prefix" => "v1"], function () {
+Route::group(["prefix" => "v1", 'middleware' => ['auth']], function () {
     /** Cache */
     Route::get('/clear-cache', function () {
         Artisan::call('optimize:clear');
         return "Cache is cleared";
-    });
-
-    //Authentication Route
-    Route::group(["prefix" => "auth"], function () {
-        Route::post('register', [RegisterController::class, 'store']);
-        Route::post('login', [LoginController::class, 'login']);
-    });
-    
-     //File Upload
-     Route::group(["prefix" => "file"], function () {
-        Route::post('binary/single/upload', [FileController::class, 'singleBinaryFileUpload']);
-    });
-
-
-    Route::group(['middleware' => ['auth:api', 'core']], function () {
-
-        //Logout Route
-        Route::get('auth/logout', [LoginController::class, 'logout']);
-
-         //This route is use to validate api token from other services\
-         Route::get('/validate/token', [LoginController::class, 'validateToken']);
-
-        //This route is used for generating application key
-        Route::get('/key', function() {
-            return \Illuminate\Support\Str::random(32);
-        });
     });
 
 });
