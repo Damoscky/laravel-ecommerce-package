@@ -9,8 +9,7 @@
 		}
 	],
 	"require": {
-		"tymon/jwt-auth": "^2.0",
-        "jeremykenedy/laravel-roles": "^9.1"
+		"tymon/jwt-auth": "^2.0"
 	},
 	"autoload": {
 		"psr-4": {
