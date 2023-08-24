@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\v1\Auth;
+namespace SbscPackage\Authentication\Http\Controllers\v1\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Http\Requests\LoginRequest;
-use App\Responser\JsonResponser;
-use App\Helpers\ProcessAuditLog;
+use SbscPackage\Authentication\Http\Requests\LoginRequest;
+use SbscPackage\Authentication\Responser\JsonResponser;
+use SbscPackage\Authentication\Helpers\ProcessAuditLog;
 use Illuminate\Support\Facades\Notification;
-use App\Notifications\LoginNotification;
+use SbscPackage\Authentication\Notifications\LoginNotification;
 use JWTAuth, DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
