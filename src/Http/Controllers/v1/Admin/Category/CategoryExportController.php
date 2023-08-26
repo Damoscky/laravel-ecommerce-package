@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Http\Controllers\v1\Admin\Category;
+namespace SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Category;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\CategoriesReportExport;
-use App\Models\Category;
-use App\Responser\JsonResponser;
+use SbscPackage\Ecommerce\Exports\CategoriesReportExport;
+use SbscPackage\Ecommerce\Models\Category;
+use SbscPackage\Ecommerce\Responser\JsonResponser;
 use Illuminate\Support\Carbon;
 
-class CategoryExportController extends Controller
+class CategoryExportController extends BaseController
 {
     public function exportCategories(Request $request)
     {

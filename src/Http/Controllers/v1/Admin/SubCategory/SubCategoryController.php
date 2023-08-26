@@ -1,19 +1,19 @@
 <?php
 
-namespace App\Http\Controllers\v1\Admin\SubCategory;
+namespace SbscPackage\Ecommerce\Http\Controllers\v1\Admin\SubCategory;
 
-use App\Http\Controllers\Controller;
-use App\Models\SubCategory;
+use Illuminate\Routing\Controller as BaseController;
+use SbscPackage\Ecommerce\Models\SubCategory;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades;
 use Illuminate\Support\Carbon;
-use App\Helpers\ProcessAuditLog;
-use App\Responser\JsonResponser;;
+use SbscPackage\Ecommerce\Helpers\ProcessAuditLog;
+use SbscPackage\Ecommerce\Responser\JsonResponser;;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
-class SubCategoryController extends Controller
+class SubCategoryController extends BaseController
 {
     public function index(Request $request)
     {

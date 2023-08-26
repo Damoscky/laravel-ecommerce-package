@@ -30,7 +30,7 @@ class EcommerceServiceProvider extends ServiceProvider
 
 	protected function registerViews()
 	{
-		$this->loadViewsFrom(__DIR__.'/../resources/views', 'Proofs');
+		$this->loadViewsFrom(__DIR__.'/../resources/views', 'Ecommerce');
 	}
 
 	protected function routeConfiguration()

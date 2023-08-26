@@ -4,7 +4,7 @@ namespace SbscPackage\Ecommerce\Http\Middleware;
 
 use Closure;
 
-class CoreMiddleware
+class EcommerceAdminMiddleware
 {
     /**
      * Handle an incoming request.
@@ -15,10 +15,10 @@ class CoreMiddleware
      */
     public function handle($request, Closure $next)
     {
-        if (!auth()->user()) {
+        if (auth()->user()->roles[0]->slug != "ecommerceadmin") {
             return response()->json([
                 "success" => false,
-                "message" => "Unauthenticated :("
+                "message" => "Access Denied :("
             ], 403);
         }
         return $next($request);

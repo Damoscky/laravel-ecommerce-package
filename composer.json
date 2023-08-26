@@ -14,7 +14,7 @@
 	"autoload": {
 		"psr-4": {
 			"SbscPackage\\Ecommerce\\": "src",
-			"SbscPackages\\Ecommerce\\Database\\": "database/"
+			"SbscPackage\\Ecommerce\\Database\\": "database/"
 		}
 	},
 	"repositories": [

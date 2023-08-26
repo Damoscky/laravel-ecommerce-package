@@ -1,22 +1,22 @@
 <?php
 
-namespace App\Http\Controllers\v1\Admin\Product;
+namespace SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Product;
 
-use App\Http\Controllers\Controller;
-use App\Models\Product;
+use Illuminate\Routing\Controller as BaseController;
+use SbscPackage\Ecommerce\Models\Product;
 use Illuminate\Http\Request;
-use App\Helpers\ProcessAuditLog;
-use App\Responser\JsonResponser;
-use App\Http\Requests\CreateProductRequest;
+use SbscPackage\Ecommerce\Helpers\ProcessAuditLog;
+use SbscPackage\Ecommerce\Responser\JsonResponser;
+use SbscPackage\Ecommerce\Http\Requests\CreateProductRequest;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ProductReportExport;
-use App\Models\Category;
+use SbscPackage\Ecommerce\Exports\ProductReportExport;
+use SbscPackage\Ecommerce\Models\Category;
 use Illuminate\Support\Facades\Validator;
 use Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-class ProductController extends Controller
+class ProductController extends BaseController
 {
     /**
      * fetch list of all products
