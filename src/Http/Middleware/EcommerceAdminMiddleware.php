@@ -19,7 +19,7 @@ class EcommerceAdminMiddleware
             return response()->json([
                 "success" => false,
                 "message" => "Access Denied :("
-            ], 403);
+            ], 401);
         }
         return $next($request);
     }

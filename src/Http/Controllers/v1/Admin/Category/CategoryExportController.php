@@ -19,6 +19,7 @@ class CategoryExportController extends BaseController
         $categorySearchParam = $request->category;
         $statusSearchParam = $request->status;
         $sort = $request->sort;
+        $sortByRequestParam = $request->sort_by;
 
         (!is_null($request->start_date) && !is_null($request->end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
 
@@ -31,11 +32,18 @@ class CategoryExportController extends BaseController
         }
 
         try {
-            $categories = Category::orderBy('created_at', $sort)
-                ->when($categorySearchParam, function($query, $categorySearchParam) use($request) {
+            $categories = Category::when($categorySearchParam, function($query, $categorySearchParam) use($request) {
                     return $query->where('cat_name', 'LIKE', '%' .$categorySearchParam. '%');
                 })->when($statusSearchParam, function($query, $statusSearchParam) use($request) {
                     return $query->where('is_active', $statusSearchParam);
+                })->when($sortByRequestParam, function ($query) use ($request) {
+                    if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                        return $query->orderBy('name', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                        return $query->orderBy('created_at', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }
                 })->when($dateSearchParams, function($query, $dateSearchParams) use($request) {
                     $startDate = Carbon::parse($request->start_date);
                     $endDate = Carbon::parse($request->end_date);

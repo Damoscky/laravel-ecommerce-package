@@ -6,6 +6,7 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use SbscPackage\Ecommerce\Helpers\ProcessAuditLog;
+use SbscPackage\Ecommerce\Helpers\UserMgtHelper;
 use SbscPackage\Ecommerce\Models\Category;
 use SbscPackage\Ecommerce\Responser\JsonResponser;
 use Illuminate\Support\Facades\DB;
@@ -24,9 +25,12 @@ class CategoryController extends BaseController
 
         $categorySearchParam = $request->category_name;
         $statusSearchParam = $request->status;
+        
+        $sortByRequestParam = $request->sort_by;
 
         (!is_null($request->start_date) && !is_null($request->end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
 
+    
         if(!isset($request->sort)){
             $sort = 'ASC';
         }else if($request->sort == 'asc'){
@@ -36,14 +40,30 @@ class CategoryController extends BaseController
         }
 
         try {
-            $records = Category::with('subcategory', 'product')->orderBy('created_at', $sort)
+            $records = Category::with('subcategory', 'product')
             ->when($categorySearchParam, function($query, $categorySearchParam) use($request) {
                 return $query->where('name', 'LIKE', '%' .$categorySearchParam. '%');
             })->when($statusSearchParam, function($query, $statusSearchParam) use($request) {
                 return $query->where('status', $statusSearchParam);
-            })->paginate(10);
+            })
+            ->when($sortByRequestParam, function ($query) use ($request) {
+                if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                    return $query->orderBy('name', 'asc');
+                }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                    return $query->orderBy('created_at', 'asc');
+                }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                    return $query->orderBy('created_at', 'desc');
+                }
+            });
 
-            return JsonResponser::send(false, 'Record found successfully', $records, 200);
+            if(isset($request->export)){
+                $records = $records->get();
+                return Excel::download(new CategoriesReportExport($records), 'categoriesreportdata.xlsx');
+            }else{
+                $records = $records->paginate(12);
+                return JsonResponser::send(false, 'Record found successfully', $records, 200);
+            }
+
         } catch (\Throwable $error) {
             logger($error);
             return JsonResponser::send(true, $error->getMessage(), [], 500);
@@ -53,7 +73,7 @@ class CategoryController extends BaseController
     public function getCategoryNoPagination()
     {
         try {
-            $categories = Category::orderBy('name', 'ASC')->get();
+            $categories = Category::where('status', "Active")->orderBy('name', 'ASC')->get();
 
             return JsonResponser::send(false, $categories->count() . ' Categor(ies) Available', $categories, 200);
         } catch (\Throwable $error) {
@@ -85,7 +105,7 @@ class CategoryController extends BaseController
                 return JsonResponser::send(true, $request->category_name.' already exist. please try again.', [], 400);
             }
 
-            $currentUserInstance = \Session::get('user');
+            $currentUserInstance = UserMgtHelper::userInstance();
 
             DB::beginTransaction();
 
@@ -108,7 +128,7 @@ class CategoryController extends BaseController
             $category = Category::create([
                 'name' => $request->category_name,
                 'slug' => Str::slug($request->category_name),
-                'created_by' => $currentUserInstance['id'],
+                'created_by' => $currentUserInstance->id,
                 'status' => "Inactive",
                 "is_active" => 0,
                 'file_path' => $fileUrl
@@ -116,11 +136,11 @@ class CategoryController extends BaseController
 
 
             $dataToLog = [
-                'causer_id' => $currentUserInstance['id'],
+                'causer_id' => $currentUserInstance->id,
                 'action_id' => $category->id,
                 'action_type' => "Models\Category",
                 'log_name' => "Category created Successfully",
-                'description' => "Category created Successfully by {$currentUserInstance['lastname']} {$currentUserInstance['firstname']}",
+                'description' => "Category created Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
             ProcessAuditLog::storeAuditLog($dataToLog);
@@ -193,7 +213,8 @@ class CategoryController extends BaseController
             $fileUrl = $category->file_path;
         }
 
-        $currentUserInstance = \Session::get('user');
+        $currentUserInstance = UserMgtHelper::userInstance();
+        
         try {
             DB::beginTransaction();
 
@@ -206,11 +227,11 @@ class CategoryController extends BaseController
             ]);
 
             $dataToLog = [
-                'causer_id' => $currentUserInstance['id'],
+                'causer_id' => $currentUserInstance->id,
                 'action_id' => $category->id,
                 'action_type' => "Models\Category",
                 'log_name' => "Category updated Successfully",
-                'description' => "Category updated Successfully  by {$currentUserInstance['lastname']} {$currentUserInstance['firstname']}",
+                'description' => "Category updated Successfully  by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
             ProcessAuditLog::storeAuditLog($dataToLog);
@@ -255,7 +276,7 @@ class CategoryController extends BaseController
             return JsonResponser::send(true, 'Record Not Found', null, 404);
         }
 
-        $currentUserInstance = \Session::get('user');
+        $currentUserInstance = UserMgtHelper::userInstance();
         try {
             DB::beginTransaction();
 
@@ -265,11 +286,11 @@ class CategoryController extends BaseController
             ]);
 
             $dataToLog = [
-                'causer_id' => $currentUserInstance['id'],
+                'causer_id' => $currentUserInstance->id,
                 'action_id' => $category->id,
                 'action_type' => "Models\Category",
                 'log_name' => "Category activated Successfully",
-                'description' => "Category activated Successfully by {$currentUserInstance['lastname']} {$currentUserInstance['firstname']}",
+                'description' => "Category activated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
             ProcessAuditLog::storeAuditLog($dataToLog);
@@ -293,7 +314,7 @@ class CategoryController extends BaseController
             return JsonResponser::send(true, 'Record Not Found', null, 404);
         }
 
-        $currentUserInstance = \Session::get('user');
+        $currentUserInstance = UserMgtHelper::userInstance();
 
         try {
             DB::beginTransaction();
@@ -304,11 +325,11 @@ class CategoryController extends BaseController
             ]);
 
             $dataToLog = [
-                'causer_id' => $currentUserInstance['id'],
+                'causer_id' => $currentUserInstance->id,
                 'action_id' => $category->id,
                 'action_type' => "Models\Category",
                 'log_name' => "Category deactivated Successfully",
-                'description' => "Category deactivated Successfully by {$currentUserInstance['lastname']} {$currentUserInstance['firstname']}",
+                'description' => "Category deactivated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
             ProcessAuditLog::storeAuditLog($dataToLog);
@@ -326,6 +347,7 @@ class CategoryController extends BaseController
         $categorySearchParam = $request->category_name;
         $statusSearchParam = $request->status;
         $sort = $request->sort;
+        $sortByRequestParam = $request->sort_by;
 
         (!is_null($request->start_date) && !is_null($request->end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
 
@@ -347,6 +369,14 @@ class CategoryController extends BaseController
                     $startDate = Carbon::parse($request->start_date);
                     $endDate = Carbon::parse($request->end_date);
                     return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
+                })->when($alphabetically, function ($query) {
+                    return $query->orderBy('name', 'asc');
+                })
+                ->when($dateOldToNew, function ($query) {
+                    return $query->orderBy('created_at', 'asc');
+                })
+                ->when($dateNewToOld, function ($query) {
+                    return $query->orderBy('created_at', 'desc');
                 })->paginate(12);
 
 
@@ -368,6 +398,7 @@ class CategoryController extends BaseController
         $categorySearchParam = $request->category_name;
         $statusSearchParam = $request->status;
         $sort = $request->sort;
+        $sortByRequestParam = $request->sort_by;
 
         (!is_null($request->start_date) && !is_null($request->end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
 
@@ -389,7 +420,15 @@ class CategoryController extends BaseController
                     $startDate = Carbon::parse($request->start_date);
                     $endDate = Carbon::parse($request->end_date);
                     return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
-                })->where('status', "Pending")->paginate(12);
+                })->when($sortByRequestParam, function ($query) use ($request) {
+                    if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                        return $query->orderBy('name', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                        return $query->orderBy('created_at', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }
+                })->where('status', "Inactive")->paginate(12);
 
             return JsonResponser::send(false, $categories->count() . ' Categor(ies) Available', $categories);
         } catch (\Throwable $error) {
@@ -404,6 +443,7 @@ class CategoryController extends BaseController
         $categorySearchParam = $request->category_name;
         $statusSearchParam = $request->status;
         $sort = $request->sort;
+        $sortByRequestParam = $request->sort_by;
 
         (!is_null($request->start_date) && !is_null($request->end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
 
@@ -425,6 +465,14 @@ class CategoryController extends BaseController
                     $startDate = Carbon::parse($request->start_date);
                     $endDate = Carbon::parse($request->end_date);
                     return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
+                })->when($sortByRequestParam, function ($query) use ($request) {
+                    if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                        return $query->orderBy('name', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                        return $query->orderBy('created_at', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }
                 })->where('status', "Approved")->paginate(12);
 
             return JsonResponser::send(false, $categories->count() . ' Categor(ies) Available', $categories);

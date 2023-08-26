@@ -32,8 +32,6 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
     // 'middleware' => ["core", "admin"]
     Route::group(['prefix' => 'admin', "namespace" => "v1\Admin", 'middleware' => ["auth:api", "ecommerceadmin"]], function () {
 
-        //Logout Route
-        // Route::get('auth/logout', [LoginController::class, 'logout']);
 
          /** Admin Category Route ***/
          Route::group(["prefix" => "category", "namespace" => "v1\Admin"], function () {
@@ -46,6 +44,32 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::post('/pending', [AdminCategoryController::class, 'pendingCategory']);
             Route::post('/approved', [AdminCategoryController::class, 'approvedCategory']);
             Route::get('/no-pagination', [AdminCategoryController::class, 'getCategoryNoPagination']);
+        });
+
+         /*** Admin Sub Category Route ***/
+         Route::group(["prefix" => 'subcategory', "namespace" => "v1\Admin"], function () {
+
+            Route::post('/', [AdminSubCategoryController::class, 'index']);
+            Route::get('/no-pagination', [AdminSubCategoryController::class, 'getSubCategoryNoPagination']);
+            Route::post('/store', [AdminSubCategoryController::class, 'store']);
+            Route::put('/update/{id}', [AdminSubCategoryController::class, 'update']);
+            Route::post('/pending', [AdminSubCategoryController::class, 'pendingSubcategory']);
+            Route::put('/{id}/activate', [AdminSubCategoryController::class, 'activate']);
+            Route::put('/{id}/deactivate', [AdminSubCategoryController::class, 'deactivate']);
+        });
+
+        //Products
+        Route::group(['prefix' => 'products'], function () {
+            Route::post('/all', [AdminProductController::class, 'listAllProducts']);
+            Route::get('/pending', [AdminProductController::class, 'listAllPendingProducts']);
+            Route::get('/approved', [AdminProductController::class, 'listAllApprovedProducts']);
+            Route::post('/export', [AdminProductController::class, 'exportProducts']);
+            Route::put('/{id}/activate', [AdminProductController::class, 'activate']);
+            Route::put('/{id}/deactivate', [AdminProductController::class, 'deactivate']);
+            Route::get('/{id}', [AdminProductController::class, 'show']);
+            Route::put('/update/{id}', [AdminProductController::class, 'update']);
+            Route::post('/store', [AdminProductController::class, 'store']);
+            Route::get('/stats/all', [AdminProductController::class, 'productStat']);
         });
 
     });

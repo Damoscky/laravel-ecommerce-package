@@ -34,7 +34,7 @@ class ProductController extends BaseController
 
 
         try {
-            $products = Product::with('subcategory')->where("created_at", "!=", null)->orderBy('id', 'DESC')
+            $products = Product::with('subcategory', 'category')->where("created_at", "!=", null)->orderBy('id', 'DESC')
                 ->when($categorySearchParam, function ($query, $categorySearchParam) use ($request) {
                     return $query->whereHas('category', function ($query) use ($categorySearchParam) {
                         return $query->where('name', 'LIKE', '%' . $categorySearchParam . '%');

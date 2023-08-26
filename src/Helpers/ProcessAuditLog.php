@@ -2,7 +2,7 @@
 
 namespace SbscPackage\Ecommerce\Helpers;
 
-use SbscPackage\Ecommerce\Models\AuditLog;
+use App\Models\AuditLog;
 
 class ProcessAuditLog {
 
