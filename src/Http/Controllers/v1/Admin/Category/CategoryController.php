@@ -129,7 +129,7 @@ class CategoryController extends BaseController
                 'name' => $request->category_name,
                 'slug' => Str::slug($request->category_name),
                 'created_by' => $currentUserInstance->id,
-                'status' => "Inactive",
+                'status' => "Pending Approval",
                 "is_active" => 0,
                 'file_path' => $fileUrl
             ]);
@@ -221,7 +221,7 @@ class CategoryController extends BaseController
             $category->update([
                 "name" => $request->category_name,
                 "slug" => Str::slug($request->category_name),
-                "status" => "Inactive",
+                "status" => "Pending Approval",
                 "is_active" => 0, 
                 "file_path" => $fileUrl,
             ]);
@@ -304,6 +304,42 @@ class CategoryController extends BaseController
     }
 
     /**
+     * Approve Deleted Category
+     */
+    public function approveDeletedCategory($id)
+    {
+        $category = Category::find($id);
+
+        if(!$category){
+            return JsonResponser::send(true, 'Record Not Found', null, 404);
+        }
+
+        $currentUserInstance = UserMgtHelper::userInstance();
+        try {
+            DB::beginTransaction();
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $category->id,
+                'action_type' => "Models\Category",
+                'log_name' => "Category deleted Successfully",
+                'description' => "Category deleted Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+
+            $category->delete();
+
+            DB::commit();
+            return JsonResponser::send(false, 'Category Deleted Successfully!', $category, 200);
+        } catch (\Throwable $error) {
+            DB::rollBack();
+            logger($error);
+            return JsonResponser::send(true, $error->getMessage(), [], 500);
+        }
+    }
+
+    /**
      * Deactivate Category
      */
     public function deactivate($id)
@@ -335,6 +371,44 @@ class CategoryController extends BaseController
             ProcessAuditLog::storeAuditLog($dataToLog);
             DB::commit();
             return JsonResponser::send(false, 'Category Deactivated Successfully!', $category, 200);
+        } catch (\Throwable $error) {
+            DB::rollBack();
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+
+    /**
+     * Delete Category
+     */
+    public function deleteCategory($id)
+    {
+        $category = Category::find($id);
+
+        if(!$category){
+            return JsonResponser::send(true, 'Record Not Found', null, 404);
+        }
+
+        $currentUserInstance = UserMgtHelper::userInstance();
+
+        try {
+            DB::beginTransaction();
+
+            $category->update([
+                "status" => "Pending Delete"
+            ]);
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $category->id,
+                'action_type' => "Models\Category",
+                'log_name' => "Category deleted Successfully",
+                'description' => "Category deleted Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+            DB::commit();
+            return JsonResponser::send(false, 'Category Send for approval Successfully!', $category, 200);
         } catch (\Throwable $error) {
             DB::rollBack();
             logger($error);
@@ -428,7 +502,51 @@ class CategoryController extends BaseController
                     }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
                         return $query->orderBy('created_at', 'desc');
                     }
-                })->where('status', "Inactive")->paginate(12);
+                })->where('status', "Pending Approval")->paginate(12);
+
+            return JsonResponser::send(false, $categories->count() . ' Categor(ies) Available', $categories);
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, $error->getMessage(), [], 500);
+        }
+    }
+
+    public function pendingDeletedCategory(Request $request)
+    {
+        $categorySearchParam = $request->category_name;
+        $statusSearchParam = $request->status;
+        $sort = $request->sort;
+        $sortByRequestParam = $request->sort_by;
+
+        (!is_null($request->start_date) && !is_null($request->end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
+
+        if(!isset($request->sort)){
+            $sort = 'ASC';
+        }else if($request->sort == 'asc'){
+            $sort = 'ASC';
+        }else if($request->sort == 'desc'){
+            $sort = 'DESC';
+        }
+
+        try {
+            $categories = Category::orderBy('created_at', $sort)
+                ->when($categorySearchParam, function($query, $categorySearchParam) use($request) {
+                    return $query->where('name', 'LIKE', '%' .$categorySearchParam. '%');
+                })->when($statusSearchParam, function($query, $statusSearchParam) use($request) {
+                    return $query->where('is_active', $statusSearchParam);
+                })->when($dateSearchParams, function($query, $dateSearchParams) use($request) {
+                    $startDate = Carbon::parse($request->start_date);
+                    $endDate = Carbon::parse($request->end_date);
+                    return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
+                })->when($sortByRequestParam, function ($query) use ($request) {
+                    if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                        return $query->orderBy('name', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                        return $query->orderBy('created_at', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }
+                })->where('status', "Pending Delete")->paginate(12);
 
             return JsonResponser::send(false, $categories->count() . ' Categor(ies) Available', $categories);
         } catch (\Throwable $error) {

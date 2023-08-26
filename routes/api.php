@@ -40,8 +40,11 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::put('/update/{id}', [AdminCategoryController::class, 'update']);
             Route::put('/{id}/activate', [AdminCategoryController::class, 'activate']);
             Route::put('/{id}/deactivate', [AdminCategoryController::class, 'deactivate']);
+            Route::put('/pending/delete/{id}', [AdminCategoryController::class, 'deleteCategory']);
             Route::post('/export', [AdminCategoryController::class, 'exportCategories']);
             Route::post('/pending', [AdminCategoryController::class, 'pendingCategory']);
+            Route::post('/pending/delete', [AdminCategoryController::class, 'pendingDeletedCategory']);
+            Route::delete('/approve/delete/{id}', [AdminCategoryController::class, 'approveDeletedCategory']);
             Route::post('/approved', [AdminCategoryController::class, 'approvedCategory']);
             Route::get('/no-pagination', [AdminCategoryController::class, 'getCategoryNoPagination']);
         });
@@ -53,6 +56,10 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::get('/no-pagination', [AdminSubCategoryController::class, 'getSubCategoryNoPagination']);
             Route::post('/store', [AdminSubCategoryController::class, 'store']);
             Route::put('/update/{id}', [AdminSubCategoryController::class, 'update']);
+            Route::put('/delete/{id}', [AdminSubCategoryController::class, 'update']);
+            Route::post('/pending', [AdminSubCategoryController::class, 'pendingSubCategory']);
+            Route::put('/pending/delete/{id}', [AdminSubCategoryController::class, 'deleteSubCategory']);
+            Route::delete('/approve/delete/{id}', [AdminSubCategoryController::class, 'approveDeletedSubcategory']);
             Route::post('/pending', [AdminSubCategoryController::class, 'pendingSubcategory']);
             Route::put('/{id}/activate', [AdminSubCategoryController::class, 'activate']);
             Route::put('/{id}/deactivate', [AdminSubCategoryController::class, 'deactivate']);

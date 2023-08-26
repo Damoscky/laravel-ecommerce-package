@@ -71,6 +71,44 @@ class SubCategoryController extends BaseController
         }
     }
 
+    /**
+     * Delete Category
+     */
+    public function deleteSubCategory($id)
+    {
+        $subcategory = SubCategory::find($id);
+
+        if(!$subcategory){
+            return JsonResponser::send(true, 'Record Not Found', null, 404);
+        }
+
+        $currentUserInstance = UserMgtHelper::userInstance();
+
+        try {
+            DB::beginTransaction();
+
+            $subcategory->update([
+                "status" => "Pending Delete"
+            ]);
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $subcategory->id,
+                'action_type' => "Models\SubCategory",
+                'log_name' => "SubCategory Pending Delete Successfully",
+                'description' => "SubCategory Pending Delete Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+            DB::commit();
+            return JsonResponser::send(false, 'Sub Category Send for approval Successfully!', $subcategory, 200);
+        } catch (\Throwable $error) {
+            DB::rollBack();
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+
     public function pendingSubcategory(Request $request)
     {
         $subcategorySearchParam = $request->subcategory_name;
@@ -105,7 +143,7 @@ class SubCategoryController extends BaseController
                 }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
                     return $query->orderBy('created_at', 'desc');
                 }
-            })->where('status', 'Inactive');
+            })->where('status', 'Pending Approval')->paginate(12);
 
             return JsonResponser::send(false, 'Record found successfully', $records, 200);
 
@@ -173,7 +211,7 @@ class SubCategoryController extends BaseController
                 'name' => $request->subcategory_name,
                 "slug" => Str::slug($request->subcategory_name),
                 "file_path" => $fileUrl,
-                'status' => "Inactive",
+                'status' => "Pending Approval",
                 "is_active" => 0,
                 'created_by' => $currentUserInstance->id,
             ]);
@@ -266,7 +304,7 @@ class SubCategoryController extends BaseController
                 'name' => $request->subcategory_name,
                 "file_path" => $fileUrl,
                 "slug" => Str::slug($request->subcategory_name),
-                'status' => "Inactive",
+                'status' => "Pending Approval",
                 "is_active" => 0,
             ]);
 
@@ -338,6 +376,41 @@ class SubCategoryController extends BaseController
             ProcessAuditLog::storeAuditLog($dataToLog);
 
             return JsonResponser::send(false, 'Subcategory Activated Successfully!', $subCategory);
+        } catch (\Throwable $th) {
+            logger($th);
+            return JsonResponser::send(true, 'Internal server error', null, 500);
+        }
+    }
+
+    
+    /**
+     * Approve Deleted Category
+     */
+    public function approveDeletedSubcategory($id)
+    {
+        $subCategory = SubCategory::find($id);
+
+        if (!$subCategory) {
+            return JsonResponser::send(true, 'Record Not Found', null, 404);
+        }
+
+        try {
+
+            $currentUserInstance = UserMgtHelper::userInstance();
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $subCategory->id,
+                'action_type' => "Models\SubCategory",
+                'log_name' => "SubCategory deletd Successfully",
+                'description' => "SubCategory deleted Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+
+            $subCategory->delete();
+
+            return JsonResponser::send(false, 'Subcategory Deleted Successfully!', $subCategory);
         } catch (\Throwable $th) {
             logger($th);
             return JsonResponser::send(true, 'Internal server error', null, 500);
