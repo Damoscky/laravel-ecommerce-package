@@ -63,6 +63,8 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::post('/pending', [AdminSubCategoryController::class, 'pendingSubcategory']);
             Route::put('/{id}/activate', [AdminSubCategoryController::class, 'activate']);
             Route::put('/{id}/deactivate', [AdminSubCategoryController::class, 'deactivate']);
+            Route::get('/no-pagination', [AdminSubCategoryController::class, 'getSubCategoryNoPagination']);
+            Route::get('/by-category/{id}', [AdminSubCategoryController::class, 'getSubCategoryByCategoryId']);
         });
 
         //Products

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('products', function (Blueprint $table) {
+        Schema::create('ecommerce_products', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('category_id');
             $table->unsignedBigInteger('sub_category_id');
@@ -22,10 +22,14 @@ return new class extends Migration
             $table->string('brand_name')->nullable();
             $table->string('sku')->nullable();
             $table->integer('minimum_purchase_per_quantity');
+            $table->string('manage_stock_quantity')->nullable();
             $table->bigInteger('quantity_supplied')->default(0);
             $table->bigInteger('quantity_purchased')->default(0);
             $table->bigInteger('available_quantity')->default(0);
-            $table->mediumText('product_images')->nullable();
+            $table->mediumText('product_image1')->nullable();
+            $table->mediumText('product_image2')->nullable();
+            $table->mediumText('product_image3')->nullable();
+            $table->mediumText('product_image4')->nullable();
             $table->mediumText('featured_image')->nullable();
             $table->boolean('in_stock')->default(true);
             $table->decimal('regular_price', 15, 2)->default(0.00);
@@ -57,6 +61,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('products');
+        Schema::dropIfExists('ecommerce_products');
     }
 };

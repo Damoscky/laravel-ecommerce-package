@@ -71,6 +71,30 @@ class SubCategoryController extends BaseController
         }
     }
 
+    public function getSubCategoryNoPagination()
+    {
+        try {
+            $subcategories = SubCategory::where('status', "Active")->orderBy('name', 'ASC')->get();
+
+            return JsonResponser::send(false, $subcategories->count() . ' Subcategor(ies) Available', $subcategories, 200);
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, $error->getMessage(), [], 500);
+        }
+    }
+
+    public function getSubCategoryByCategoryId($id)
+    {
+        try {
+            $subcategories = SubCategory::where('category_id', $id)->where('status', "Active")->orderBy('name', 'ASC')->get();
+
+            return JsonResponser::send(false, 'Record found successfully', $subcategories, 200);
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, $error->getMessage(), [], 500);
+        }
+    }
+
     /**
      * Delete Category
      */
@@ -147,18 +171,6 @@ class SubCategoryController extends BaseController
 
             return JsonResponser::send(false, 'Record found successfully', $records, 200);
 
-        } catch (\Throwable $error) {
-            logger($error);
-            return JsonResponser::send(true, $error->getMessage(), [], 500);
-        }
-    }
-
-    public function getSubCategoryNoPagination()
-    {
-        try {
-            $records = SubCategory::orderBy('name', 'ASC')->get();
-
-            return JsonResponser::send(false, $records->count() . ' Record(s) Available', $records, 200);
         } catch (\Throwable $error) {
             logger($error);
             return JsonResponser::send(true, $error->getMessage(), [], 500);

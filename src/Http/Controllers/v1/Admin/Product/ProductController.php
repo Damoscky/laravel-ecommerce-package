@@ -3,7 +3,7 @@
 namespace SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Product;
 
 use Illuminate\Routing\Controller as BaseController;
-use SbscPackage\Ecommerce\Models\Product;
+use SbscPackage\Ecommerce\Models\EcommerceProduct;
 use Illuminate\Http\Request;
 use SbscPackage\Ecommerce\Helpers\ProcessAuditLog;
 use SbscPackage\Ecommerce\Responser\JsonResponser;
@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use SbscPackage\Ecommerce\Helpers\UserMgtHelper;
 
 class ProductController extends BaseController
 {
@@ -34,7 +35,7 @@ class ProductController extends BaseController
 
 
         try {
-            $products = Product::with('subcategory', 'category')->where("created_at", "!=", null)->orderBy('id', 'DESC')
+            $products = EcommerceProduct::with('subcategory', 'category')->where("created_at", "!=", null)->orderBy('id', 'DESC')
                 ->when($categorySearchParam, function ($query, $categorySearchParam) use ($request) {
                     return $query->whereHas('category', function ($query) use ($categorySearchParam) {
                         return $query->where('name', 'LIKE', '%' . $categorySearchParam . '%');
@@ -66,7 +67,7 @@ class ProductController extends BaseController
     public function listAllPendingProducts()
     {
         try {
-            $products = Product::where("status", "Pending")
+            $products = EcommerceProduct::where("status", "Pending")
                 ->where("created_at", "!=", null)
                 ->orderBy('id', 'DESC')->paginate(10);
 
@@ -83,7 +84,7 @@ class ProductController extends BaseController
     public function listAllApprovedProducts()
     {
         try {
-            $products = Product::where("status", "Approved")
+            $products = EcommerceProduct::where("status", "Approved")
                 ->where("is_active", true)
                 ->where("created_at", "!=", null)
                 ->orderBy('id', 'DESC')->paginate(10);
@@ -105,8 +106,8 @@ class ProductController extends BaseController
     public function store(CreateProductRequest $request)
     {
 
-        $currentUserInstance = \Session::get('user');
-        $userId = $currentUserInstance['id'];
+        $currentUserInstance = UserMgtHelper::userInstance();
+        $userId = $currentUserInstance->id;
 
         try {
             DB::beginTransaction();
@@ -131,7 +132,7 @@ class ProductController extends BaseController
                 $images[] = null;
             }
 
-            $product = Product::create([
+            $product = EcommerceProduct::create([
                 'category_id'  => $request->category_id,
                 'sub_category_id'  => $request->sub_category_id,
                 'product_name' => $request->product_name,
@@ -139,6 +140,7 @@ class ProductController extends BaseController
                 'short_description' => $request->short_description,
                 'tags' => $request->tags,
                 'brand_name' => $request->brand_name,
+                'manage_stock_quantity' => $request->manage_stock_quantity,
                 'sku' => $request->sku,
                 'minimum_purchase_per_quantity' => $request->minimum_purchase_per_quantity,
                 'quantity_supplied' => $request->quantity_supplied,
@@ -157,11 +159,11 @@ class ProductController extends BaseController
             ]);
 
             $dataToLog = [
-                'causer_id' => $currentUserInstance['id'],
+                'causer_id' => $currentUserInstance->id,
                 'action_id' => $product->id,
                 'action_type' => "Models\Product",
                 'log_name' => "Product created Successfully",
-                'description' => "Product created Successfully by {$currentUserInstance['lastname']} {$currentUserInstance['firstname']}",
+                'description' => "Product created Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
             ProcessAuditLog::storeAuditLog($dataToLog);
@@ -186,7 +188,7 @@ class ProductController extends BaseController
 
 
         try {
-            $products = Product::orderBy('id', 'DESC')
+            $products = EcommerceProduct::orderBy('id', 'DESC')
                 ->when($categorySearchParam, function ($query, $categorySearchParam) use ($request) {
                     return $query->whereHas('category', function ($query) use ($categorySearchParam) {
                         return $query->where('name', 'LIKE', '%' . $categorySearchParam . '%');
@@ -219,7 +221,7 @@ class ProductController extends BaseController
     public function show($id)
     {
         try {
-            $product = Product::where('id', $id)->first();
+            $product = EcommerceProduct::where('id', $id)->first();
 
             if (!$product) {
                 return JsonResponser::send(true, "Record not found.", [], 400);
@@ -242,7 +244,7 @@ class ProductController extends BaseController
      */
     public function update(Request $request, $id)
     {
-        $product = Product::find($id);
+        $product = EcommerceProduct::find($id);
 
         if (!$product) {
             return JsonResponser::send(true, 'Product Not Found', []);
@@ -259,8 +261,8 @@ class ProductController extends BaseController
             return JsonResponser::send(true, $validate->errors()->first(), $validate->errors()->all(), 400);
         }
 
-        $currentUserInstance = \Session::get('user');
-        $userId = $currentUserInstance['id'];
+        $currentUserInstance = UserMgtHelper::userInstance();
+        $userId = $currentUserInstance->id;
 
 
         try {
@@ -294,6 +296,7 @@ class ProductController extends BaseController
                 'short_description' => $request->short_description,
                 'tags' => $request->tags,
                 'brand_name' => $request->brand_name,
+                'manage_stock_quantity' => $request->manage_stock_quantity,
                 'sku' => $request->sku,
                 'minimum_purchase_per_quantity' => $request->minimum_purchase_per_quantity,
                 'quantity_supplied' => $request->quantity_supplied,
@@ -313,11 +316,11 @@ class ProductController extends BaseController
             ]);
 
             $dataToLog = [
-                'causer_id' => $currentUserInstance['id'],
+                'causer_id' => $currentUserInstance->id,
                 'action_id' => $product->id,
                 'action_type' => "Models\Product",
                 'log_name' => "Product updated Successfully",
-                'description' => "Product updated Successfully by {$currentUserInstance['lastname']} {$currentUserInstance['firstname']}",
+                'description' => "Product updated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
             ProcessAuditLog::storeAuditLog($dataToLog);
@@ -366,21 +369,21 @@ class ProductController extends BaseController
     public function destroy($id)
     {
         try {
-            $product = Product::find($id);
+            $product = EcommerceProduct::find($id);
             if (!$product) {
                 return JsonResponser::send(true, 'Product not found', [], 400);
             }
 
-            $currentUserInstance = \Session::get('user');
+            $currentUserInstance = UserMgtHelper::userInstance();
 
             DB::beginTransaction();
 
             $dataToLog = [
-                'causer_id' => $currentUserInstance['id'],
+                'causer_id' => $currentUserInstance->id,
                 'action_id' => $product->id,
                 'action_type' => "Models\Product",
                 'log_name' => "Product deleted Successfully",
-                'description' => "Product deleted Successfully by {$currentUserInstance['lastname']} {$currentUserInstance['firstname']}",
+                'description' => "Product deleted Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
             ProcessAuditLog::storeAuditLog($dataToLog);
@@ -404,7 +407,7 @@ class ProductController extends BaseController
 
     public function activate($id)
     {
-        $product = Product::find($id);
+        $product = EcommerceProduct::find($id);
 
         if (!$product) {
             return JsonResponser::send(true, 'Product not found', null);
@@ -418,14 +421,14 @@ class ProductController extends BaseController
                 'status' => 'Approved'
             ]);
 
-            $currentUserInstance = \Session::get('user');
+            $currentUserInstance = UserMgtHelper::userInstance();
 
             $dataToLog = [
-                'causer_id' => $currentUserInstance['id'],
+                'causer_id' => $currentUserInstance->id,
                 'action_id' => $product->id,
                 'action_type' => "Models\Product",
                 'log_name' => "Product approved Successfully",
-                'description' => "Product activated Successfully by {$currentUserInstance['lastname']} {$currentUserInstance['firstname']}",
+                'description' => "Product activated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
             ProcessAuditLog::storeAuditLog($dataToLog);
@@ -443,7 +446,7 @@ class ProductController extends BaseController
      */
     public function deactivate($id)
     {
-        $product = Product::find($id);
+        $product = EcommerceProduct::find($id);
         if (!$product) {
             return JsonResponser::send(true, 'Product not found', [], 400);
         }
@@ -456,14 +459,14 @@ class ProductController extends BaseController
                 'status' => "Declined"
             ]);
 
-            $currentUserInstance = \Session::get('user');
+            $currentUserInstance = UserMgtHelper::userInstance();
 
             $dataToLog = [
-                'causer_id' => $currentUserInstance['id'],
+                'causer_id' => $currentUserInstance->id,
                 'action_id' => $product->id,
                 'action_type' => "Models\Product",
                 'log_name' => "Product deactivated Successfully",
-                'description' => "Product deactivated Successfully by {$currentUserInstance['lastname']} {$currentUserInstance['firstname']}",
+                'description' => "Product deactivated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
             ProcessAuditLog::storeAuditLog($dataToLog);
@@ -479,12 +482,12 @@ class ProductController extends BaseController
     public function productStat()
     {
         try {
-            $products = Product::count();
-            $allProducts = Product::all();
-            $activatedProducts = Product::where('is_active', true)->get();
-            $deactivatedProducts = Product::where('is_active', false)->get();
-            $deactivatedProductsCount = Product::where('is_active', false)->count();
-            $activatedProductsCount = Product::where('is_active', true)->count();
+            $products = EcommerceProduct::count();
+            $allProducts = EcommerceProduct::all();
+            $activatedProducts = EcommerceProduct::where('is_active', true)->get();
+            $deactivatedProducts = EcommerceProduct::where('is_active', false)->get();
+            $deactivatedProductsCount = EcommerceProduct::where('is_active', false)->count();
+            $activatedProductsCount = EcommerceProduct::where('is_active', true)->count();
             $categories = Category::count();
 
             $data = [
