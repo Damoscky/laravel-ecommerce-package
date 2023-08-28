@@ -15,6 +15,7 @@ class ProcessAuditLog {
                 'action_type' => $dataToLog['action_type'],
                 'action_id' => $dataToLog['action_id'],
                 'log_name' => $dataToLog['log_name'],
+                'package_type' => "SbscPackage\Ecommerce",
                 'description' => $dataToLog['description']
             ]);
         }

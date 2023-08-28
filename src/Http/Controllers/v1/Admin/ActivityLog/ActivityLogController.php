@@ -1,18 +1,21 @@
 <?php
 
-namespace App\Http\Controllers\v1\Admin\ActivityLog;
+namespace SbscPackage\Ecommerce\Http\Controllers\v1\Admin\ActivityLog;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller as BaseController;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use App\Helpers\ProcessAuditLog;
-use App\Responser\JsonResponser;
+use SbscPackage\Ecommerce\Helpers\ProcessAuditLog;
+use SbscPackage\Ecommerce\Responser\JsonResponser;
 
-class ActivityLogController extends Controller
+class ActivityLogController extends BaseController
 {
     public function index(Request $request)
     {
+        if(!auth()->user()->hasPermission('view.auditlogs')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $nameSearchParam = $request->username;
         $alphabetically = $request->alphabetically;
         $dateOldToNew = $request->date_old_to_new;
@@ -36,11 +39,10 @@ class ActivityLogController extends Controller
 
         (!is_null($request->start_date) && !is_null($request->end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
 
-
         try {
-            return \Session::get('userInstance');
-            $records = AuditLog::
-                when($nameSearchParam, function ($query, $nameSearchParam) use ($request) {
+            
+            $records = AuditLog::where('package_type', 'SbscPackage\Ecommerce')
+                ->when($nameSearchParam, function ($query, $nameSearchParam) use ($request) {
                     return $query->whereHas('causer', function ($query) use ($nameSearchParam) {
                         return $query->where('firstname', 'LIKE', '%' . $nameSearchParam . '%');
                     });

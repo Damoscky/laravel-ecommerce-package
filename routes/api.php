@@ -65,7 +65,7 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::put('/{id}/deactivate', [AdminSubCategoryController::class, 'deactivate']);
             Route::get('/no-pagination', [AdminSubCategoryController::class, 'getSubCategoryNoPagination']);
             Route::get('/by-category/{id}', [AdminSubCategoryController::class, 'getSubCategoryByCategoryId']);
-        });
+        }); 
 
         //Products
         Route::group(['prefix' => 'products'], function () {
@@ -79,6 +79,11 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::put('/update/{id}', [AdminProductController::class, 'update']);
             Route::post('/store', [AdminProductController::class, 'store']);
             Route::get('/stats/all', [AdminProductController::class, 'productStat']);
+        });
+
+        Route::group(['prefix' => 'auditlogs'], function () {
+            Route::post('/', [AdminActivityLogController::class, 'index']);
+
         });
 
     });

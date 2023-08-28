@@ -66,14 +66,15 @@ class EcommerceRoleSeeder extends Seeder
         $ecommerceAdminRole = config('roles.models.role')::where('name', '=', 'Ecommerce Admin')->first();
         $ecommerceSuperAdminRole = config('roles.models.role')::where('name', '=', 'Ecommerce Super Admin')->first();
         $ecommerceCustomerRole = config('roles.models.role')::where('name', '=', 'Ecommerce Customer')->first();
+        $ecommerceVendorRole = config('roles.models.role')::where('name', '=', 'Ecommerce Vendor')->first();
         $permissions = config('roles.models.permission')::all();
 
-        if (User::where('email', '=', 'salesmanager@fanerp.com')->first() === null) {
+        if (User::where('email', '=', 'ecommerceadmin@fanerp.com')->first() === null) {
             $newUser = User::create([
-                'firstname'     => 'Sales-Manager',
+                'firstname'     => 'Ecommerce-Admin',
                 'lastname'     => 'Fanerp',
-                'email'    => 'salesmanager@fanerp.com',
-                'phoneno' => '09088229593',
+                'email'    => 'ecommerceadmin@fanerp.com',
+                'phoneno' => '09088112266',
                 'is_verified' => true,
                 'is_active' => UserStatusInterface::ACTIVE,
                 'can_login' => true,
@@ -82,21 +83,18 @@ class EcommerceRoleSeeder extends Seeder
                 'remember_token' => Str::random(10),
             ]);
 
-            $newUser->attachRole($salesManagerRole);
+            $newUser->attachRole($ecommerceAdminRole);
             foreach ($permissions as $permission) {
                 $newUser->attachPermission($permission);
             }
         }
-    
 
-
-
-        if (User::where('email', '=', 'salesofficer@fanerp.com')->first() === null) {
+        if (User::where('email', '=', 'ecommercesuperadmin@fanerp.com')->first() === null) {
             $newUser = User::create([
-                'firstname'     => 'Sales-Officer',
+                'firstname'     => 'Ecommerce-Super-Admin',
                 'lastname'     => 'Fanerp',
-                'email'    => 'salesofficer@fanerp.com',
-                'phoneno' => '09058229693',
+                'email'    => 'ecommercesuperadmin@fanerp.com',
+                'phoneno' => '08166441994',
                 'is_verified' => true,
                 'is_active' => UserStatusInterface::ACTIVE,
                 'can_login' => true,
@@ -105,7 +103,7 @@ class EcommerceRoleSeeder extends Seeder
                 'remember_token' => Str::random(10),
             ]);
 
-            $newUser->attachRole($salesOfficerRole);
+            $newUser->attachRole($ecommerceSuperAdminRole);
             foreach ($permissions as $permission) {
                 $newUser->attachPermission($permission);
             }
@@ -113,12 +111,12 @@ class EcommerceRoleSeeder extends Seeder
 
 
 
-        if (User::where('email', '=', 'crmadmin@fanerp.com')->first() === null) {
+        if (User::where('email', '=', 'ecommercevendor@fanerp.com')->first() === null) {
             $newUser = User::create([
-                'firstname'     => 'CRM Admin',
+                'firstname'     => 'Ecommerce Vendor',
                 'lastname'     => 'Fanerp',
-                'email'    => 'crmadmin@fanerp.com',
-                'phoneno' => '09088209693',
+                'email'    => 'ecommercevendor@fanerp.com',
+                'phoneno' => '08192761034',
                 'is_verified' => true,
                 'is_active' => UserStatusInterface::ACTIVE,
                 'can_login' => true,
@@ -127,10 +125,26 @@ class EcommerceRoleSeeder extends Seeder
                 'remember_token' => Str::random(10),
             ]);
 
-            $newUser->attachRole($crmAdminRole);
-            foreach ($permissions as $permission) {
-                $newUser->attachPermission($permission);
-            }
+            $newUser->attachRole($ecommerceVendorRole);
+            
+        }
+
+        if (User::where('email', '=', 'ecommercecustomer@fanerp.com')->first() === null) {
+            $newUser = User::create([
+                'firstname'     => 'Ecommerce Customer',
+                'lastname'     => 'Fanerp',
+                'email'    => 'ecommercecustomer@fanerp.com',
+                'phoneno' => '09188374455',
+                'is_verified' => true,
+                'is_active' => UserStatusInterface::ACTIVE,
+                'can_login' => true,
+                'email_verified_at' => now(),
+                'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+                'remember_token' => Str::random(10),
+            ]);
+
+            $newUser->attachRole($ecommerceCustomerRole);
+            
         }
 
 

@@ -21,7 +21,9 @@ class CategoryController extends BaseController
 {
     public function index(Request $request)
     {
-        // $currentUser = \Session::get('user');
+        if(!auth()->user()->hasPermission('view.category')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
 
         $categorySearchParam = $request->category_name;
         $statusSearchParam = $request->status;
@@ -91,6 +93,10 @@ class CategoryController extends BaseController
      */
     public function store(Request $request)
     {
+        if(!auth()->user()->hasPermission('create.category')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
         $validate = $this->validateCategory($request);
 
         if ($validate->fails()) {
@@ -161,6 +167,10 @@ class CategoryController extends BaseController
      */
     public function show($id)
     {
+        if(!auth()->user()->hasPermission('view.category')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
         try {
             $category = Category::find($id);
 
@@ -183,6 +193,10 @@ class CategoryController extends BaseController
      */
     public function update(Request $request, $id)
     {
+        if(!auth()->user()->hasPermission('edit.category')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
         $category = Category::find($id);
 
         if (!$category) {
@@ -270,6 +284,9 @@ class CategoryController extends BaseController
      */
     public function activate($id)
     {
+        if(!auth()->user()->hasPermission('manage.category')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $category = Category::find($id);
 
         if(!$category){
@@ -308,6 +325,9 @@ class CategoryController extends BaseController
      */
     public function approveDeletedCategory($id)
     {
+        if(!auth()->user()->hasPermission('manage.category')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $category = Category::find($id);
 
         if(!$category){
@@ -344,6 +364,9 @@ class CategoryController extends BaseController
      */
     public function deactivate($id)
     {
+        if(!auth()->user()->hasPermission('manage.category')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $category = Category::find($id);
 
         if(!$category){
@@ -383,6 +406,9 @@ class CategoryController extends BaseController
      */
     public function deleteCategory($id)
     {
+        if(!auth()->user()->hasPermission('delete.category')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $category = Category::find($id);
 
         if(!$category){
@@ -418,6 +444,9 @@ class CategoryController extends BaseController
 
     public function exportCategories(Request $request)
     {
+        if(!auth()->user()->hasPermission('export.report')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $categorySearchParam = $request->category_name;
         $statusSearchParam = $request->status;
         $sort = $request->sort;
@@ -469,6 +498,10 @@ class CategoryController extends BaseController
 
     public function pendingCategory(Request $request)
     {
+        if(!auth()->user()->hasPermission('view.category')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
         $categorySearchParam = $request->category_name;
         $statusSearchParam = $request->status;
         $sort = $request->sort;
@@ -558,6 +591,9 @@ class CategoryController extends BaseController
 
     public function approvedCategory(Request $request)
     {
+         if(!auth()->user()->hasPermission('manage.category')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $categorySearchParam = $request->category_name;
         $statusSearchParam = $request->status;
         $sort = $request->sort;

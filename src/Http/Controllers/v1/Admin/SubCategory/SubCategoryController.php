@@ -21,6 +21,9 @@ class SubCategoryController extends BaseController
 {
     public function index(Request $request)
     {
+        if(!auth()->user()->hasPermission('view.subcategory')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $currentUserInstance = UserMgtHelper::userInstance();
 
         $subcategorySearchParam = $request->subcategory_name;
@@ -100,6 +103,9 @@ class SubCategoryController extends BaseController
      */
     public function deleteSubCategory($id)
     {
+        if(!auth()->user()->hasPermission('delete.subcategory')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $subcategory = SubCategory::find($id);
 
         if(!$subcategory){
@@ -135,6 +141,9 @@ class SubCategoryController extends BaseController
 
     public function pendingSubcategory(Request $request)
     {
+        if(!auth()->user()->hasPermission('view.subcategory')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $subcategorySearchParam = $request->subcategory_name;
         $statusSearchParam = $request->status;
         $sortByRequestParam = $request->sort_by;
@@ -185,6 +194,10 @@ class SubCategoryController extends BaseController
      */
     public function store(Request $request)
     {
+        if(!auth()->user()->hasPermission('create.subcategory')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
         $validate = $this->validateSubcategory($request);
 
         if ($validate->fails()) {
@@ -255,6 +268,9 @@ class SubCategoryController extends BaseController
      */
     public function show($id)
     {
+        if(!auth()->user()->hasPermission('view.subcategory')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $subcategory = SubCategory::find($id);
 
         if (!$subcategory) {
@@ -273,6 +289,9 @@ class SubCategoryController extends BaseController
      */
     public function update(Request $request, $id)
     {
+        if(!auth()->user()->hasPermission('edit.subcategory')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $subcategory = SubCategory::find($id);
 
         if (!$subcategory) {
@@ -363,6 +382,9 @@ class SubCategoryController extends BaseController
      */
     public function activate($id)
     {
+        if(!auth()->user()->hasPermission('manage.subcategory')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $subCategory = SubCategory::find($id);
 
         if (!$subCategory) {
@@ -400,6 +422,9 @@ class SubCategoryController extends BaseController
      */
     public function approveDeletedSubcategory($id)
     {
+        if(!auth()->user()->hasPermission('manage.subcategory')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $subCategory = SubCategory::find($id);
 
         if (!$subCategory) {
@@ -434,6 +459,9 @@ class SubCategoryController extends BaseController
      */
     public function deactivate($id)
     {
+        if(!auth()->user()->hasPermission('manage.subcategory')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $subCategory = SubCategory::find($id);
 
         if (!$subCategory) {

@@ -16,6 +16,8 @@ use Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use SbscPackage\Ecommerce\Helpers\UserMgtHelper;
+use SbscPackage\Ecommerce\Interfaces\ProductStatusInterface;
+use SbscPackage\Ecommerce\Helpers\FileUploadHelper;
 
 class ProductController extends BaseController
 {
@@ -24,12 +26,16 @@ class ProductController extends BaseController
      */
     public function listAllProducts(Request $request)
     {
+        if(!auth()->user()->hasPermission('view.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
 
         $productNameSearchParam = $request->product_name;
         $productDescriptionSearchParam = $request->product_description;
         $priceSearchParam = $request->price;
-        $categorySearchParam = $request->category;
+        $categorySearchParam = $request->category_id;
         $statusSearchParam = $request->status;
+        $sortByRequestParam = $request->sort_by;
 
         (!is_null($request->product_start_date) && !is_null($request->product_end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
 
@@ -40,6 +46,14 @@ class ProductController extends BaseController
                     return $query->whereHas('category', function ($query) use ($categorySearchParam) {
                         return $query->where('name', 'LIKE', '%' . $categorySearchParam . '%');
                     });
+                })->when($sortByRequestParam, function ($query) use ($request) {
+                    if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                        return $query->orderBy('product_name', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                        return $query->orderBy('created_at', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }
                 })->when($productNameSearchParam, function ($query, $productNameSearchParam) use ($request) {
                     return $query->where('product_name', 'LIKE', '%' . $productNameSearchParam . '%');
                 })->when($productDescriptionSearchParam, function ($query, $productDescriptionSearchParam) use ($request) {
@@ -47,14 +61,17 @@ class ProductController extends BaseController
                 })->when($priceSearchParam, function ($query, $priceSearchParam) use ($request) {
                     return $query->where('sales_price', $priceSearchParam);
                 })->when($statusSearchParam, function ($query, $statusSearchParam) use ($request) {
-                    return $query->where('is_active', $statusSearchParam);
-                })->paginate(10);
+                    return $query->where('status', $statusSearchParam);
+                });
 
-            if (!$products) {
-                return JsonResponser::send(true, "Record not found.", [], 400);
+            if(isset($request->export)){
+                $products = $products->get();
+                return Excel::download(new ProductReportExport($products), 'categoriesreportdata.xlsx');
+            }else{
+                $products = $products->paginate(12);
+                return JsonResponser::send(false, 'Record found successfully', $products, 200);
             }
 
-            return JsonResponser::send(false, $products->count() . ' Product(s) Available', $products);
         } catch (\Throwable $error) {
             logger($error);
             return JsonResponser::send(true, 'Internal server error!', [], 500);
@@ -83,6 +100,10 @@ class ProductController extends BaseController
      */
     public function listAllApprovedProducts()
     {
+        if(!auth()->user()->hasPermission('view.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
         try {
             $products = EcommerceProduct::where("status", "Approved")
                 ->where("is_active", true)
@@ -105,6 +126,9 @@ class ProductController extends BaseController
      */
     public function store(CreateProductRequest $request)
     {
+        if(!auth()->user()->hasPermission('create.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
 
         $currentUserInstance = UserMgtHelper::userInstance();
         $userId = $currentUserInstance->id;
@@ -112,24 +136,36 @@ class ProductController extends BaseController
         try {
             DB::beginTransaction();
 
-            $images = [];
-
-            if (isset($request->product_images)) {
-                $productImages = $request->product_images;
-
-                $imageInfo = explode(';base64,', $productImages);
-                $checkExtention = explode('data:', $imageInfo[0]);
-                $checkExtention = explode('/', $checkExtention[1]);
-                $fileExt = str_replace(' ', '', $checkExtention[1]);
-                $image = str_replace(' ', '+', $imageInfo[1]);
-                $uniqueId = bin2hex(openssl_random_pseudo_bytes(4));
-                $name = 'invoice_' . $uniqueId . '_' . date("YmdHis") . '.' . $fileExt;
-                $fileUrl = config('app.url') . 'products/' . $name;
-                Storage::disk('products')->put($name, base64_decode($image));
-
-                $images[] = $fileUrl;
+            if (isset($request->product_image1)) {
+                $productImage = $request->product_image1;
+                $productKey = 'Product';
+                $image1 = FileUploadHelper::singleStringFileUpload($productImage, $productKey);
             } else {
-                $images[] = null;
+                $image1 = null;
+            }
+
+            if (isset($request->product_image2)) {
+                $productImage = $request->product_image2;
+                $productKey = 'Product';
+                $image2 = FileUploadHelper::singleStringFileUpload($productImage, $productKey);
+            } else {
+                $image2 = null;
+            }
+
+            if (isset($request->product_image3)) {
+                $productImage = $request->product_image3;
+                $productKey = 'Product';
+                $image3 = FileUploadHelper::singleStringFileUpload($productImage, $productKey);
+            } else {
+                $image3 = null;
+            }
+
+            if (isset($request->product_image4)) {
+                $productImage = $request->product_image4;
+                $productKey = 'Product';
+                $image4 = FileUploadHelper::singleStringFileUpload($productImage, $productKey);
+            } else {
+                $image4 = null;
             }
 
             $product = EcommerceProduct::create([
@@ -155,7 +191,12 @@ class ProductController extends BaseController
                 'width' => $request->width,
                 'height' => $request->height,
                 'ean' => $request->ean,
-                'product_images' =>  implode("|", $images),
+                'is_active' => false,
+                'product_image1' =>  $image1,
+                'product_image2' =>  $image2,
+                'product_image3' =>  $image3,
+                'product_image4' =>  $image4,
+                'status' => ProductStatusInterface::PENDINGAPPROVAL,
             ]);
 
             $dataToLog = [
@@ -178,6 +219,9 @@ class ProductController extends BaseController
 
     public function exportProducts(Request $request)
     {
+        if(!auth()->user()->hasPermission('export.reports')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $productNameSearchParam = $request->search;
         $productDescriptionSearchParam = $request->product_description;
         $priceSearchParam = $request->price;
@@ -220,6 +264,9 @@ class ProductController extends BaseController
      */
     public function show($id)
     {
+        if(!auth()->user()->hasPermission('view.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         try {
             $product = EcommerceProduct::where('id', $id)->first();
 
@@ -244,6 +291,9 @@ class ProductController extends BaseController
      */
     public function update(Request $request, $id)
     {
+        if(!auth()->user()->hasPermission('edit.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $product = EcommerceProduct::find($id);
 
         if (!$product) {
@@ -268,25 +318,43 @@ class ProductController extends BaseController
         try {
             DB::beginTransaction();
 
-            $images = $product->product_images;
-
-            if ($productImages = $request->product_images) {
-                $imageInfo = explode(';base64,', $productImages);
-                $checkExtention = explode('data:', $imageInfo[0]);
-                $checkExtention = explode('/', $checkExtention[1]);
-                $fileExt = str_replace(' ', '', $checkExtention[1]);
-                $image = str_replace(' ', '+', $imageInfo[1]);
-                $uniqueId = bin2hex(openssl_random_pseudo_bytes(4));
-                $name = 'invoice_' . $uniqueId . '_' . date("YmdHis") . '.' . $fileExt;
-                $fileUrl = config('app.url') . 'products/' . $name;
-                Storage::disk('products')->put($name, base64_decode($image));
-                $imagesArr[] = $fileUrl; 
-                
-                $images = implode('|', $imagesArr);
+            if (isset($request->product_image1)) {
+                $productImage = $request->product_image1;
+                $productKey = 'Product';
+                $image1 = FileUploadHelper::singleStringFileUpload($productImage, $productKey);
             } else {
-                $images = $product->product_images;
+                $image1 = $product->product_image1;
             }
 
+            if ($request->product_image2 == "no-image") {
+                $image2 = "";
+            } else if(isset($request->product_image2)){
+                $productImage = $request->product_image2;
+                $productKey = 'Product';
+                $image2 = FileUploadHelper::singleStringFileUpload($productImage, $productKey);
+            }else{
+                $image2 = $product->product_image2;
+            }
+
+            if ($request->product_image3 == "no-image") {
+                $image3 = "";
+            }else if (isset($request->product_image3)) {
+                $productImage = $request->product_image3;
+                $productKey = 'Product';
+                $image3 = FileUploadHelper::singleStringFileUpload($productImage, $productKey);
+            } else {
+                $image3 = $product->product_image3;
+            }
+
+            if ($request->product_image4 == "no-image") {
+                $image4 = "";
+            }else if (isset($request->product_image4)) {
+                $productImage = $request->product_image4;
+                $productKey = 'Product';
+                $image4 = FileUploadHelper::singleStringFileUpload($productImage, $productKey);
+            } else {
+                $image4 = $product->product_image4;
+            }
 
             $product->update([
                 'category_id'  => $request->category_id,
@@ -311,8 +379,12 @@ class ProductController extends BaseController
                 'width' => $request->width,
                 'height' => $request->height,
                 'ean' => $request->ean,
-                'product_images' =>  $images,
-                'status' => 'Pending'
+                'product_image1' =>  $image1,
+                'product_image2' =>  $image2,
+                'product_image3' =>  $image3,
+                'product_image4' =>  $image4,
+                'is_active' => false,
+                'status' => ProductStatusInterface::PENDINGAPPROVAL,
             ]);
 
             $dataToLog = [
@@ -368,6 +440,9 @@ class ProductController extends BaseController
      */
     public function destroy($id)
     {
+        if(!auth()->user()->hasPermission('delete.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         try {
             $product = EcommerceProduct::find($id);
             if (!$product) {
@@ -407,6 +482,9 @@ class ProductController extends BaseController
 
     public function activate($id)
     {
+        if(!auth()->user()->hasPermission('manage.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
         $product = EcommerceProduct::find($id);
 
         if (!$product) {
@@ -446,6 +524,10 @@ class ProductController extends BaseController
      */
     public function deactivate($id)
     {
+        if(!auth()->user()->hasPermission('manage.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
         $product = EcommerceProduct::find($id);
         if (!$product) {
             return JsonResponser::send(true, 'Product not found', [], 400);
@@ -486,8 +568,8 @@ class ProductController extends BaseController
             $allProducts = EcommerceProduct::all();
             $activatedProducts = EcommerceProduct::where('is_active', true)->get();
             $deactivatedProducts = EcommerceProduct::where('is_active', false)->get();
-            $deactivatedProductsCount = EcommerceProduct::where('is_active', false)->count();
-            $activatedProductsCount = EcommerceProduct::where('is_active', true)->count();
+            $deactivatedProductsCount = EcommerceProduct::where('is_active', false)->where('status', ProductStatusInterface::INACTIVE)->count();
+            $activatedProductsCount = EcommerceProduct::where('is_active', true)->where('status', ProductStatusInterface::ACTIVE)->count();
             $categories = Category::count();
 
             $data = [

@@ -1,6 +1,6 @@
 <?php
 
-namespace SbscPackages\Authentication\Helpers;
+namespace SbscPackage\Ecommerce\Helpers;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
