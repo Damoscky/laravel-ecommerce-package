@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 use DB;
 use SbscPackage\Ecommerce\Helpers\ProcessAuditLog;
 use SbscPackage\Ecommerce\Helpers\UserMgtHelper;
-use SbscPackage\Ecommerce\Responser\JsonResponser;;
+use SbscPackage\Ecommerce\Responser\JsonResponser;
 use Illuminate\Support\Facades\Validator;
 use SbscPackage\Ecommerce\Exports\SubCategoriesReportExport;
 use Maatwebsite\Excel\Facades\Excel;

@@ -49,11 +49,11 @@ class ActivityLogController extends BaseController
                 })->when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
                     return $query->where('created_at', '>=', $carbonDateFilter);
                 })->when($alphabetically, function ($query) {
-                    return $query->orderBy('name', 'ASC');
+                    return $query->orderBy('description', 'ASC');
                 })->when($dateOldToNew, function ($query) {
-                    return $query->orderBy('id', 'asc');
+                    return $query->orderBy('created_at', 'asc');
                 })->when($dateNewToOld, function ($query) {
-                    return $query->orderBy('id', 'desc');
+                    return $query->orderBy('created_at', 'desc');
                 })->paginate(10);
 
             return JsonResponser::send(false, 'Record found successfully', $records);
@@ -61,5 +61,15 @@ class ActivityLogController extends BaseController
             logger($error);
             return JsonResponser::send(true, $error->getMessage(), [], 500);
         }
+    }
+
+    public function show($id)
+    {
+        $records = AuditLog::with('causer')->where('package_type', 'SbscPackage\Ecommerce')->where('id', $id)->first();
+
+        if(is_null($records)){
+            return JsonResponser::send(true, 'Record not found', [], 400);
+        }
+        return JsonResponser::send(false, 'Record found successfully', $records);
     }
 }

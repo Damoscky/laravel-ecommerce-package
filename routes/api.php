@@ -7,6 +7,7 @@ use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Category\CategoryController 
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\SubCategory\SubCategoryController AS AdminSubCategoryController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Product\ProductController AS AdminProductController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\ActivityLog\ActivityLogController AS AdminActivityLogController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Customer\CustomerController AS AdminCustomerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +84,13 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
 
         Route::group(['prefix' => 'auditlogs'], function () {
             Route::post('/', [AdminActivityLogController::class, 'index']);
+            Route::get('/{id}', [AdminActivityLogController::class, 'show']);
+
+        });
+
+        Route::group(['prefix' => 'customers'], function () {
+            Route::post('/', [AdminCustomerController::class, 'index']);
+            Route::get('/{id}', [AdminCustomerController::class, 'show']);
 
         });
 
