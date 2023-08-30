@@ -17,6 +17,7 @@ use SbscPackage\Ecommerce\Helpers\FileUploadHelper;
 use App\Models\User;
 use SbscPackage\Ecommerce\Interfaces\ComplaintStatusInterface;
 use SbscPackage\Ecommerce\Models\EcommerceComplaint;
+use SbscPackage\Ecommerce\Models\EcommerceComplaintStatus;
 
 class ComplaintController extends BaseController
 {
@@ -111,4 +112,53 @@ class ComplaintController extends BaseController
             return JsonResponser::send(true, 'Internal server error!', [], 500);
         }
     }
+
+    public function update(Request $request, $id)
+    {
+        if(!auth()->user()->hasPermission('manage.complaints')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+        try {
+            $record = EcommerceComplaint::where('id', $id)->first();
+
+            if (!$record) {
+                return JsonResponser::send(true, "Record not found.", [], 400);
+            }
+
+            $attachment = FileUploadHelper::singleStringFileUpload($request->attachment, "EcommerceComplain");
+
+            $currentUserInstance = auth()->user();
+
+            $newRecord = EcommerceComplaintStatus::create([
+                'ecommerce_complaint_id' => $record->id,
+                'user_id' => $currentUserInstance->id,
+                'comment' => $request->comment,
+                'previous_status' => $record->status,
+                'status' => $request->status,
+                'attachment' => $attachment
+            ]);
+            
+            $record->update([
+                'status' => $request->status,
+                'priority' => $request->priority,
+            ]);
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $newRecord->id,
+                'action_type' => "Models\EcommerceComplaint",
+                'log_name' => "EcommerceComplaint updated Successfully",
+                'action' => 'Updated',
+                'description' => "{$currentUserInstance->lastname} {$currentUserInstance->firstname} updated EcommerceComplaint Successfully",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+
+            return JsonResponser::send(false, 'Record updated successfully', $newRecord);
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+    
 }

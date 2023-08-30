@@ -124,6 +124,7 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
 
         Route::group(['prefix' => 'complaints'], function () {
             Route::post('/all', [AdminComplaintController::class, 'listAllComplaints']);
+            Route::post('/update/{id}', [AdminComplaintController::class, 'update']);
             Route::get('/stats', [AdminComplaintController::class, 'complaintsStat']);
             Route::get('/{id}', [AdminComplaintController::class, 'show']);
 

@@ -11,7 +11,7 @@ class EcommerceComplaint extends Model
     use HasFactory;
     protected $guarded = ["id"];
 
-    protected $with = ['customer', 'ecommerceorderdetails', 'complaintstatus'];
+    protected $with = ['customer', 'ecommerceorderdetails.ecommerceproduct', 'complaintstatus'];
 
     public function customer()
     {
