@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 use SbscPackage\Ecommerce\Helpers\UserMgtHelper;
 use SbscPackage\Ecommerce\Interfaces\ProductStatusInterface;
 use SbscPackage\Ecommerce\Helpers\FileUploadHelper;
+use SbscPackage\Ecommerce\Models\EcommerceVendor;
 
 class ProductController extends BaseController
 {
@@ -39,12 +40,11 @@ class ProductController extends BaseController
 
         (!is_null($request->product_start_date) && !is_null($request->product_end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
 
-
         try {
-            $products = EcommerceProduct::with('subcategory', 'category')->where("created_at", "!=", null)->orderBy('id', 'DESC')
+            $products = EcommerceProduct::with('subcategory', 'category')->where("created_at", "!=", null)
                 ->when($categorySearchParam, function ($query, $categorySearchParam) use ($request) {
                     return $query->whereHas('category', function ($query) use ($categorySearchParam) {
-                        return $query->where('name', 'LIKE', '%' . $categorySearchParam . '%');
+                        return $query->where('id',  $categorySearchParam);
                     });
                 })->when($sortByRequestParam, function ($query) use ($request) {
                     if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
@@ -52,6 +52,8 @@ class ProductController extends BaseController
                     }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
                         return $query->orderBy('created_at', 'asc');
                     }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }else{
                         return $query->orderBy('created_at', 'desc');
                     }
                 })->when($productNameSearchParam, function ($query, $productNameSearchParam) use ($request) {
@@ -79,16 +81,289 @@ class ProductController extends BaseController
     }
 
     /**
-     * fetch list of all pending products
+     * fetch list of all Activated products
      */
-    public function listAllPendingProducts()
+    public function listAllActivatedProducts(Request $request)
     {
-        try {
-            $products = EcommerceProduct::where("status", "Pending")
-                ->where("created_at", "!=", null)
-                ->orderBy('id', 'DESC')->paginate(10);
+        if(!auth()->user()->hasPermission('view.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
 
-            return JsonResponser::send(false, $products->count() . ' Product(s) Available', $products);
+        $productNameSearchParam = $request->product_name;
+        $productDescriptionSearchParam = $request->product_description;
+        $priceSearchParam = $request->price;
+        $categorySearchParam = $request->category_id;
+        $statusSearchParam = $request->status;
+        $sortByRequestParam = $request->sort_by;
+
+        (!is_null($request->product_start_date) && !is_null($request->product_end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
+
+        try {
+            $products = EcommerceProduct::with('subcategory', 'category')->where("created_at", "!=", null)
+                ->when($categorySearchParam, function ($query, $categorySearchParam) use ($request) {
+                    return $query->whereHas('category', function ($query) use ($categorySearchParam) {
+                        return $query->where('id',  $categorySearchParam);
+                    });
+                })->when($sortByRequestParam, function ($query) use ($request) {
+                    if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                        return $query->orderBy('product_name', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                        return $query->orderBy('created_at', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }else{
+                        return $query->orderBy('created_at', 'desc');
+                    }
+                })->when($productNameSearchParam, function ($query, $productNameSearchParam) use ($request) {
+                    return $query->where('product_name', 'LIKE', '%' . $productNameSearchParam . '%');
+                })->when($productDescriptionSearchParam, function ($query, $productDescriptionSearchParam) use ($request) {
+                    return $query->where('short_description', 'LIKE', '%' . $productDescriptionSearchParam . '%');
+                })->when($priceSearchParam, function ($query, $priceSearchParam) use ($request) {
+                    return $query->where('sales_price', $priceSearchParam);
+                })->when($statusSearchParam, function ($query, $statusSearchParam) use ($request) {
+                    return $query->where('status', $statusSearchParam);
+                })->where('status', ProductStatusInterface::ACTIVE)->where('is_active', true);
+
+            if(isset($request->export)){
+                $products = $products->get();
+                return Excel::download(new ProductReportExport($products), 'categoriesreportdata.xlsx');
+            }else{
+                $products = $products->paginate(12);
+                return JsonResponser::send(false, 'Record found successfully', $products, 200);
+            }
+
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+
+
+    /**
+     * fetch list of all Deactivated products
+     */
+    public function listAllDeactivatedProducts(Request $request)
+    {
+        if(!auth()->user()->hasPermission('view.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
+        $productNameSearchParam = $request->product_name;
+        $productDescriptionSearchParam = $request->product_description;
+        $priceSearchParam = $request->price;
+        $categorySearchParam = $request->category_id;
+        $statusSearchParam = $request->status;
+        $sortByRequestParam = $request->sort_by;
+
+        (!is_null($request->product_start_date) && !is_null($request->product_end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
+
+        try {
+            $products = EcommerceProduct::with('subcategory', 'category')->where("created_at", "!=", null)
+                ->when($categorySearchParam, function ($query, $categorySearchParam) use ($request) {
+                    return $query->whereHas('category', function ($query) use ($categorySearchParam) {
+                        return $query->where('id',  $categorySearchParam);
+                    });
+                })->when($sortByRequestParam, function ($query) use ($request) {
+                    if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                        return $query->orderBy('product_name', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                        return $query->orderBy('created_at', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }else{
+                        return $query->orderBy('created_at', 'desc');
+                    }
+                })->when($productNameSearchParam, function ($query, $productNameSearchParam) use ($request) {
+                    return $query->where('product_name', 'LIKE', '%' . $productNameSearchParam . '%');
+                })->when($productDescriptionSearchParam, function ($query, $productDescriptionSearchParam) use ($request) {
+                    return $query->where('short_description', 'LIKE', '%' . $productDescriptionSearchParam . '%');
+                })->when($priceSearchParam, function ($query, $priceSearchParam) use ($request) {
+                    return $query->where('sales_price', $priceSearchParam);
+                })->when($statusSearchParam, function ($query, $statusSearchParam) use ($request) {
+                    return $query->where('status', $statusSearchParam);
+                })->where('status', ProductStatusInterface::INACTIVE)->where('is_active', false);
+
+            if(isset($request->export)){
+                $products = $products->get();
+                return Excel::download(new ProductReportExport($products), 'categoriesreportdata.xlsx');
+            }else{
+                $products = $products->paginate(12);
+                return JsonResponser::send(false, 'Record found successfully', $products, 200);
+            }
+
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+
+    /**
+     * fetch list of all Request products
+     */
+    public function listAllRequestProducts(Request $request)
+    {
+        if(!auth()->user()->hasPermission('view.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
+        $productNameSearchParam = $request->product_name;
+        $productDescriptionSearchParam = $request->product_description;
+        $priceSearchParam = $request->price;
+        $categorySearchParam = $request->category_id;
+        $statusSearchParam = $request->status;
+        $sortByRequestParam = $request->sort_by;
+
+        (!is_null($request->product_start_date) && !is_null($request->product_end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
+
+        try {
+            $products = EcommerceProduct::with('subcategory', 'category')->where("created_at", "!=", null)
+                ->when($categorySearchParam, function ($query, $categorySearchParam) use ($request) {
+                    return $query->whereHas('category', function ($query) use ($categorySearchParam) {
+                        return $query->where('id',  $categorySearchParam);
+                    });
+                })->when($sortByRequestParam, function ($query) use ($request) {
+                    if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                        return $query->orderBy('product_name', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                        return $query->orderBy('created_at', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }else{
+                        return $query->orderBy('created_at', 'desc');
+                    }
+                })->when($productNameSearchParam, function ($query, $productNameSearchParam) use ($request) {
+                    return $query->where('product_name', 'LIKE', '%' . $productNameSearchParam . '%');
+                })->when($productDescriptionSearchParam, function ($query, $productDescriptionSearchParam) use ($request) {
+                    return $query->where('short_description', 'LIKE', '%' . $productDescriptionSearchParam . '%');
+                })->when($priceSearchParam, function ($query, $priceSearchParam) use ($request) {
+                    return $query->where('sales_price', $priceSearchParam);
+                })->when($statusSearchParam, function ($query, $statusSearchParam) use ($request) {
+                    return $query->where('status', $statusSearchParam);
+                })->where('status', ProductStatusInterface::PENDINGAPPROVAL)->orWhere('status', ProductStatusInterface::PENDINGDELETE);
+
+            if(isset($request->export)){
+                $products = $products->get();
+                return Excel::download(new ProductReportExport($products), 'categoriesreportdata.xlsx');
+            }else{
+                $products = $products->paginate(12);
+                return JsonResponser::send(false, 'Record found successfully', $products, 200);
+            }
+
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+
+    /**
+     * fetch list of all Request products
+     */
+    public function listAllDeleteRequestProducts(Request $request)
+    {
+        if(!auth()->user()->hasPermission('view.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
+        $productNameSearchParam = $request->product_name;
+        $productDescriptionSearchParam = $request->product_description;
+        $priceSearchParam = $request->price;
+        $categorySearchParam = $request->category_id;
+        $statusSearchParam = $request->status;
+        $sortByRequestParam = $request->sort_by;
+
+        (!is_null($request->product_start_date) && !is_null($request->product_end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
+
+        try {
+            $products = EcommerceProduct::with('subcategory', 'category')->where("created_at", "!=", null)
+                ->when($categorySearchParam, function ($query, $categorySearchParam) use ($request) {
+                    return $query->whereHas('category', function ($query) use ($categorySearchParam) {
+                        return $query->where('id',  $categorySearchParam);
+                    });
+                })->when($sortByRequestParam, function ($query) use ($request) {
+                    if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                        return $query->orderBy('product_name', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                        return $query->orderBy('created_at', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }else{
+                        return $query->orderBy('created_at', 'desc');
+                    }
+                })->when($productNameSearchParam, function ($query, $productNameSearchParam) use ($request) {
+                    return $query->where('product_name', 'LIKE', '%' . $productNameSearchParam . '%');
+                })->when($productDescriptionSearchParam, function ($query, $productDescriptionSearchParam) use ($request) {
+                    return $query->where('short_description', 'LIKE', '%' . $productDescriptionSearchParam . '%');
+                })->when($priceSearchParam, function ($query, $priceSearchParam) use ($request) {
+                    return $query->where('sales_price', $priceSearchParam);
+                })->when($statusSearchParam, function ($query, $statusSearchParam) use ($request) {
+                    return $query->where('status', $statusSearchParam);
+                })->where('status', ProductStatusInterface::PENDINGDELETE);
+
+            if(isset($request->export)){
+                $products = $products->get();
+                return Excel::download(new ProductReportExport($products), 'categoriesreportdata.xlsx');
+            }else{
+                $products = $products->paginate(12);
+                return JsonResponser::send(false, 'Record found successfully', $products, 200);
+            }
+
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+    /**
+     * fetch list of all Request products
+     */
+    public function listAllPendingRequestProducts(Request $request)
+    {
+        if(!auth()->user()->hasPermission('view.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
+        $productNameSearchParam = $request->product_name;
+        $productDescriptionSearchParam = $request->product_description;
+        $priceSearchParam = $request->price;
+        $categorySearchParam = $request->category_id;
+        $statusSearchParam = $request->status;
+        $sortByRequestParam = $request->sort_by;
+
+        (!is_null($request->product_start_date) && !is_null($request->product_end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
+
+        try {
+            $products = EcommerceProduct::with('subcategory', 'category')->where("created_at", "!=", null)
+                ->when($categorySearchParam, function ($query, $categorySearchParam) use ($request) {
+                    return $query->whereHas('category', function ($query) use ($categorySearchParam) {
+                        return $query->where('id',  $categorySearchParam);
+                    });
+                })->when($sortByRequestParam, function ($query) use ($request) {
+                    if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                        return $query->orderBy('product_name', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                        return $query->orderBy('created_at', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }else{
+                        return $query->orderBy('created_at', 'desc');
+                    }
+                })->when($productNameSearchParam, function ($query, $productNameSearchParam) use ($request) {
+                    return $query->where('product_name', 'LIKE', '%' . $productNameSearchParam . '%');
+                })->when($productDescriptionSearchParam, function ($query, $productDescriptionSearchParam) use ($request) {
+                    return $query->where('short_description', 'LIKE', '%' . $productDescriptionSearchParam . '%');
+                })->when($priceSearchParam, function ($query, $priceSearchParam) use ($request) {
+                    return $query->where('sales_price', $priceSearchParam);
+                })->when($statusSearchParam, function ($query, $statusSearchParam) use ($request) {
+                    return $query->where('status', $statusSearchParam);
+                })->where('status', ProductStatusInterface::PENDINGAPPROVAL);
+
+            if(isset($request->export)){
+                $products = $products->get();
+                return Excel::download(new ProductReportExport($products), 'categoriesreportdata.xlsx');
+            }else{
+                $products = $products->paginate(12);
+                return JsonResponser::send(false, 'Record found successfully', $products, 200);
+            }
+
         } catch (\Throwable $error) {
             logger($error);
             return JsonResponser::send(true, 'Internal server error!', [], 500);
@@ -168,9 +443,13 @@ class ProductController extends BaseController
                 $image4 = null;
             }
 
+            $vendorData = EcommerceVendor::where('business_name', "Fan")->first();
+            isset($vendorData) ? $vendorId = $vendorData->id : $vendorId = 1;
+
             $product = EcommerceProduct::create([
                 'category_id'  => $request->category_id,
                 'sub_category_id'  => $request->sub_category_id,
+                'ecommerce_vendor_id' =>$vendorId,
                 'product_name' => $request->product_name,
                 'long_description' => $request->long_description,
                 'short_description' => $request->short_description,
@@ -204,6 +483,7 @@ class ProductController extends BaseController
                 'action_id' => $product->id,
                 'action_type' => "Models\Product",
                 'log_name' => "Product created Successfully",
+                'action' => 'Create',
                 'description' => "Product created Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -392,6 +672,7 @@ class ProductController extends BaseController
                 'action_id' => $product->id,
                 'action_type' => "Models\Product",
                 'log_name' => "Product updated Successfully",
+                'action' => 'Edit',
                 'description' => "Product updated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -432,6 +713,193 @@ class ProductController extends BaseController
         return $validateProduct;
     }
 
+    public function deleteForApproval($id)
+    {
+        if(!auth()->user()->hasPermission('edit.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+        try {
+            $product = EcommerceProduct::find($id);
+            if (!$product) {
+                return JsonResponser::send(true, 'Product not found', [], 400);
+            }
+
+            $currentUserInstance = UserMgtHelper::userInstance();
+
+            DB::beginTransaction();
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $product->id,
+                'action_type' => "Models\Product",
+                'log_name' => "Product delete sent for approval Successfully",
+                'action' => 'Delete',
+                'description' => "Product delete sent for approval Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+
+            // delete old product images
+            //$this->deleteFile($product->product_image);
+
+            $product->update([
+                'status' => ProductStatusInterface::PENDINGDELETE
+            ]);
+            DB::commit();
+            return JsonResponser::send(false, 'Product deleted successfully', null);
+        } catch (\Throwable $error) {
+            logger($error);
+            DB::rollBack();
+            return JsonResponser::send(true, $error->getMessage(), [], 500);
+        }
+    }
+
+    public function approvePendingProduct($id)
+    {
+        if(!auth()->user()->hasPermission('manage.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+        $record = EcommerceProduct::find($id);
+
+        if (!$record) {
+            return JsonResponser::send(true, 'Record Not Found', null, 404);
+        }
+
+        try {
+            $currentUserInstance = UserMgtHelper::userInstance();
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $record->id,
+                'action_type' => "Models\EcommerceProduct",
+                'log_name' => "Product Approved Successfully",
+                'action' => 'Manage',
+                'description' => "Product approved Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+
+            $record->update([
+                'status' => ProductStatusInterface::ACTIVE,
+                'is_active' => true,
+            ]);
+
+            return JsonResponser::send(false, 'Product activated Successfully!', $record);
+        } catch (\Throwable $th) {
+            logger($th);
+            return JsonResponser::send(true, 'Internal server error', null, 500);
+        }
+    }
+
+    public function declinePendingProduct($id)
+    {
+        if(!auth()->user()->hasPermission('manage.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+        $record = EcommerceProduct::find($id);
+
+        if (!$record) {
+            return JsonResponser::send(true, 'Record Not Found', null, 404);
+        }
+
+        try {
+            $currentUserInstance = UserMgtHelper::userInstance();
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $record->id,
+                'action_type' => "Models\EcommerceProduct",
+                'log_name' => "Product Declined Successfully",
+                'action' => 'Manage',
+                'description' => "Product declined Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+
+            $record->update([
+                'status' => ProductStatusInterface::DECLINED,
+                'is_active' => false,
+            ]);
+
+            return JsonResponser::send(false, 'Product declined Successfully!', $record);
+        } catch (\Throwable $th) {
+            logger($th);
+            return JsonResponser::send(true, 'Internal server error', null, 500);
+        }
+    }
+
+    public function declineDeletedProduct($id)
+    {
+        if(!auth()->user()->hasPermission('manage.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+        $record = EcommerceProduct::find($id);
+
+        if (!$record) {
+            return JsonResponser::send(true, 'Record Not Found', null, 404);
+        }
+
+        try {
+            $currentUserInstance = UserMgtHelper::userInstance();
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $record->id,
+                'action_type' => "Models\EcommerceProduct",
+                'log_name' => "Product Declined Successfully",
+                'action' => 'Manage',
+                'description' => "Product declined Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+
+            $record->update([
+                'status' => ProductStatusInterface::ACTIVE,
+                'is_active' => true,
+            ]);
+
+            return JsonResponser::send(false, 'Product declined Successfully!', $record);
+        } catch (\Throwable $th) {
+            logger($th);
+            return JsonResponser::send(true, 'Internal server error', null, 500);
+        }
+    }
+
+    public function approveDeletedProduct($id)
+    {
+        if(!auth()->user()->hasPermission('delete.products')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+        $record = EcommerceProduct::find($id);
+
+        if (!$record) {
+            return JsonResponser::send(true, 'Record Not Found', null, 404);
+        }
+
+        try {
+
+            $currentUserInstance = UserMgtHelper::userInstance();
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $record->id,
+                'action_type' => "Models\EcommerceProduct",
+                'log_name' => "Product deleted Successfully",
+                'action' => 'Delete',
+                'description' => "Product deleted Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+
+            $record->delete();
+
+            return JsonResponser::send(false, 'Product Deleted Successfully!', $record);
+        } catch (\Throwable $th) {
+            logger($th);
+            return JsonResponser::send(true, 'Internal server error', null, 500);
+        }
+    }
+
      /**
      * Remove the specified resource from storage.
      *
@@ -458,6 +926,7 @@ class ProductController extends BaseController
                 'action_id' => $product->id,
                 'action_type' => "Models\Product",
                 'log_name' => "Product deleted Successfully",
+                'action' => 'Delete',
                 'description' => "Product deleted Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -506,6 +975,7 @@ class ProductController extends BaseController
                 'action_id' => $product->id,
                 'action_type' => "Models\Product",
                 'log_name' => "Product approved Successfully",
+                'action' => 'Manage',
                 'description' => "Product activated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -548,6 +1018,7 @@ class ProductController extends BaseController
                 'action_id' => $product->id,
                 'action_type' => "Models\Product",
                 'log_name' => "Product deactivated Successfully",
+                'action' => 'Manage',
                 'description' => "Product deactivated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 

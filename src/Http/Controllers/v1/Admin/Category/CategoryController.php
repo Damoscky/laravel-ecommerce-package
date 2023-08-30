@@ -15,6 +15,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use SbscPackage\Ecommerce\Helpers\FileUploadHelper;
 use Session;
 
 class CategoryController extends BaseController
@@ -54,6 +55,8 @@ class CategoryController extends BaseController
                 }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
                     return $query->orderBy('created_at', 'asc');
                 }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                    return $query->orderBy('created_at', 'desc');
+                }else{
                     return $query->orderBy('created_at', 'desc');
                 }
             });
@@ -115,19 +118,11 @@ class CategoryController extends BaseController
 
             DB::beginTransaction();
 
-            if(isset($request->file)){
-                $file = $request->file;
-                $imageInfo = explode(';base64,', $file);
-                $checkExtention = explode('data:', $imageInfo[0]);
-                $checkExtention = explode('/', $checkExtention[1]);
-                $fileExt = str_replace(' ', '', $checkExtention[1]);
-                $image = str_replace(' ', '+', $imageInfo[1]);
-                $uniqueId = Str::slug($request->category_name);
-                $name = 'category_' . $uniqueId . '.' . $fileExt;
-                $fileUrl = config('app.url') . 'assets/category/' . $name;
-                Storage::disk('category')->put($name, base64_decode($image));
-               
-            }else{
+            if (isset($request->file)) {
+                $categoryImage = $request->file;
+                $imageKey = 'Category';
+                $fileUrl = FileUploadHelper::singleStringFileUpload($categoryImage, $imageKey);
+            } else {
                 $fileUrl = null;
             }
 
@@ -146,6 +141,7 @@ class CategoryController extends BaseController
                 'action_id' => $category->id,
                 'action_type' => "Models\Category",
                 'log_name' => "Category created Successfully",
+                'action' => 'Create',
                 'description' => "Category created Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -212,18 +208,11 @@ class CategoryController extends BaseController
             return JsonResponser::send(true, $validate->errors()->first(), $validate->errors()->all(), 400);
         }
 
-        if(isset($request->file)){
-            $file = $request->file;
-            $imageInfo = explode(';base64,', $file);
-            $checkExtention = explode('data:', $imageInfo[0]);
-            $checkExtention = explode('/', $checkExtention[1]);
-            $fileExt = str_replace(' ', '', $checkExtention[1]);
-            $image = str_replace(' ', '+', $imageInfo[1]);
-            $uniqueId = Str::slug($request->category_name);
-            $name = 'category_' . $uniqueId . '.' . $fileExt;
-            $fileUrl = config('app.url') . 'assets/category/' . $name;
-            Storage::disk('category')->put($name, base64_decode($image));
-        }else{
+        if (isset($request->file)) {
+            $categoryImage = $request->file;
+            $imageKey = 'Category';
+            $fileUrl = FileUploadHelper::singleStringFileUpload($categoryImage, $imageKey);
+        } else {
             $fileUrl = $category->file_path;
         }
 
@@ -245,6 +234,7 @@ class CategoryController extends BaseController
                 'action_id' => $category->id,
                 'action_type' => "Models\Category",
                 'log_name' => "Category updated Successfully",
+                'action' => 'Update',
                 'description' => "Category updated Successfully  by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -307,6 +297,7 @@ class CategoryController extends BaseController
                 'action_id' => $category->id,
                 'action_type' => "Models\Category",
                 'log_name' => "Category activated Successfully",
+                'action' => 'Manage',
                 'description' => "Category activated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -343,6 +334,7 @@ class CategoryController extends BaseController
                 'action_id' => $category->id,
                 'action_type' => "Models\Category",
                 'log_name' => "Category deleted Successfully",
+                'action' => 'Manage',
                 'description' => "Category deleted Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -388,6 +380,7 @@ class CategoryController extends BaseController
                 'action_id' => $category->id,
                 'action_type' => "Models\Category",
                 'log_name' => "Category deactivated Successfully",
+                'action' => 'Manage',
                 'description' => "Category deactivated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -429,6 +422,7 @@ class CategoryController extends BaseController
                 'action_id' => $category->id,
                 'action_type' => "Models\Category",
                 'log_name' => "Category deleted Successfully",
+                'action' => 'Delete',
                 'description' => "Category deleted Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -472,14 +466,16 @@ class CategoryController extends BaseController
                     $startDate = Carbon::parse($request->start_date);
                     $endDate = Carbon::parse($request->end_date);
                     return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
-                })->when($alphabetically, function ($query) {
-                    return $query->orderBy('name', 'asc');
-                })
-                ->when($dateOldToNew, function ($query) {
-                    return $query->orderBy('created_at', 'asc');
-                })
-                ->when($dateNewToOld, function ($query) {
-                    return $query->orderBy('created_at', 'desc');
+                })->when($sortByRequestParam, function ($query) use ($request) {
+                    if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                        return $query->orderBy('name', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                        return $query->orderBy('created_at', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }else{
+                        return $query->orderBy('created_at', 'desc');
+                    }
                 })->paginate(12);
 
 
@@ -534,6 +530,8 @@ class CategoryController extends BaseController
                         return $query->orderBy('created_at', 'asc');
                     }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
                         return $query->orderBy('created_at', 'desc');
+                    }else{
+                        return $query->orderBy('created_at', 'desc');
                     }
                 })->where('status', "Pending Approval")->paginate(12);
 
@@ -577,6 +575,8 @@ class CategoryController extends BaseController
                     }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
                         return $query->orderBy('created_at', 'asc');
                     }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }else{
                         return $query->orderBy('created_at', 'desc');
                     }
                 })->where('status', "Pending Delete")->paginate(12);
@@ -625,6 +625,8 @@ class CategoryController extends BaseController
                     }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
                         return $query->orderBy('created_at', 'asc');
                     }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }else{
                         return $query->orderBy('created_at', 'desc');
                     }
                 })->where('status', "Approved")->paginate(12);

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('category_id');
             $table->unsignedBigInteger('sub_category_id');
+            $table->unsignedBigInteger('ecommerce_vendor_id');
             $table->mediumText('product_name');
             $table->mediumText('long_description')->nullable();
             $table->mediumText('short_description')->nullable();
@@ -51,6 +52,7 @@ return new class extends Migration
             $table->string('status')->default("Pending");
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
             $table->foreign('sub_category_id')->references('id')->on('sub_categories')->onDelete('cascade');
+            $table->foreign('ecommerce_vendor_id')->references('id')->on('ecommerce_vendors')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });

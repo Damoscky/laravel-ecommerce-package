@@ -16,6 +16,7 @@ use SbscPackage\Ecommerce\Exports\SubCategoriesReportExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use SbscPackage\Ecommerce\Helpers\FileUploadHelper;
 
 class SubCategoryController extends BaseController
 {
@@ -214,19 +215,11 @@ class SubCategoryController extends BaseController
 
         $currentUserInstance = UserMgtHelper::userInstance();
 
-        if(isset($request->file)){
-            $file = $request->file;
-            $imageInfo = explode(';base64,', $file);
-            $checkExtention = explode('data:', $imageInfo[0]);
-            $checkExtention = explode('/', $checkExtention[1]);
-            $fileExt = str_replace(' ', '', $checkExtention[1]);
-            $image = str_replace(' ', '+', $imageInfo[1]);
-            $uniqueId = Str::slug($request->subcategory_name);
-            $name = 'category_' . $uniqueId . '.' . $fileExt;
-            $fileUrl = config('app.url') . 'assets/category/' . $name;
-            Storage::disk('category')->put($name, base64_decode($image));
-           
-        }else{
+        if (isset($request->file)) {
+            $categoryImage = $request->file;
+            $imageKey = 'Category';
+            $fileUrl = FileUploadHelper::singleStringFileUpload($categoryImage, $imageKey);
+        } else {
             $fileUrl = null;
         }
 
@@ -310,19 +303,11 @@ class SubCategoryController extends BaseController
             return JsonResponser::send(true, 'Division name already exist', [], 400);
         }
 
-        if(isset($request->file)){
-            $file = $request->file;
-            $imageInfo = explode(';base64,', $file);
-            $checkExtention = explode('data:', $imageInfo[0]);
-            $checkExtention = explode('/', $checkExtention[1]);
-            $fileExt = str_replace(' ', '', $checkExtention[1]);
-            $image = str_replace(' ', '+', $imageInfo[1]);
-            $uniqueId = Str::slug($request->subcategory_name);
-            $name = 'category_' . $uniqueId . '.' . $fileExt;
-            $fileUrl = config('app.url') . 'assets/category/' . $name;
-            Storage::disk('category')->put($name, base64_decode($image));
-           
-        }else{
+        if (isset($request->file)) {
+            $categoryImage = $request->file;
+            $imageKey = 'Category';
+            $fileUrl = FileUploadHelper::singleStringFileUpload($categoryImage, $imageKey);
+        } else {
             $fileUrl = $subcategory->file_path;
         }
                 
@@ -439,7 +424,7 @@ class SubCategoryController extends BaseController
                 'causer_id' => $currentUserInstance->id,
                 'action_id' => $subCategory->id,
                 'action_type' => "Models\SubCategory",
-                'log_name' => "SubCategory deletd Successfully",
+                'log_name' => "SubCategory deleted Successfully",
                 'description' => "SubCategory deleted Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 

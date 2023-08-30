@@ -229,6 +229,19 @@ class EcommercePermissionsTableSeeder extends Seeder
                 'description' => 'AuditLog Management',
                 'model'       => 'Permission',
             ],
+
+            [
+                'name'        => 'Can View Complaints',
+                'slug'        => 'view.complaints',
+                'description' => 'Complaints Management',
+                'model'       => 'Permission',
+            ],
+            [
+                'name'        => 'Can Export Complaints',
+                'slug'        => 'manage.complaints',
+                'description' => 'Complaints Management',
+                'model'       => 'Permission',
+            ],
         ];
 
         /*

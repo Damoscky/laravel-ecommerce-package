@@ -8,6 +8,8 @@ use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\SubCategory\SubCategoryContr
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Product\ProductController AS AdminProductController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\ActivityLog\ActivityLogController AS AdminActivityLogController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Customer\CustomerController AS AdminCustomerController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Complaint\ComplaintController AS AdminComplaintController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Vendor\RegisterController AS VendorRegisterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +31,19 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
     Route::get('/clear-cache', function () {
         Artisan::call('optimize:clear');
         return "Ecommerce Cache is cleared";
+    });
+
+    //Authentication Route
+    Route::group(["prefix" => "vendor/auth"], function () {
+        Route::post('register', [VendorRegisterController::class, 'register']);
+        // Route::post('login', [LoginController::class, 'login']);
+        // Route::get('logout', [LoginController::class, 'logout']);
+    });
+
+        // Vendor Route
+    Route::group(['prefix' => 'vendor', "namespace" => "v1\Vendor", 'middleware' => ["auth:api", "ecommercevendor"]], function () {
+
+
     });
     // 'middleware' => ["core", "admin"]
     Route::group(['prefix' => 'admin', "namespace" => "v1\Admin", 'middleware' => ["auth:api", "ecommerceadmin"]], function () {
@@ -71,13 +86,22 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
         //Products
         Route::group(['prefix' => 'products'], function () {
             Route::post('/all', [AdminProductController::class, 'listAllProducts']);
-            Route::get('/pending', [AdminProductController::class, 'listAllPendingProducts']);
+            Route::post('/request/all', [AdminProductController::class, 'listAllRequestProducts']);
+            Route::post('/request/delete', [AdminProductController::class, 'listAllDeleteRequestProducts']);
+            Route::post('/request/pending', [AdminProductController::class, 'listAllPendingRequestProducts']);
+            Route::post('/activated', [AdminProductController::class, 'listAllActivatedProducts']);
+            Route::post('/deactivated', [AdminProductController::class, 'listAllDeactivatedProducts']);
             Route::get('/approved', [AdminProductController::class, 'listAllApprovedProducts']);
             Route::post('/export', [AdminProductController::class, 'exportProducts']);
             Route::put('/{id}/activate', [AdminProductController::class, 'activate']);
             Route::put('/{id}/deactivate', [AdminProductController::class, 'deactivate']);
             Route::get('/{id}', [AdminProductController::class, 'show']);
             Route::put('/update/{id}', [AdminProductController::class, 'update']);
+            Route::put('/update/delete/{id}', [AdminProductController::class, 'deleteForApproval']);
+            Route::delete('/request/delete/{id}', [AdminProductController::class, 'approveDeletedProduct']);
+            Route::put('/request/delete/decline/{id}', [AdminProductController::class, 'declineDeletedProduct']);
+            Route::put('/approve/{id}', [AdminProductController::class, 'approvePendingProduct']);
+            Route::put('/decline/{id}', [AdminProductController::class, 'declinePendingProduct']);
             Route::post('/store', [AdminProductController::class, 'store']);
             Route::get('/stats/all', [AdminProductController::class, 'productStat']);
         });
@@ -89,8 +113,19 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
         });
 
         Route::group(['prefix' => 'customers'], function () {
+            Route::get('/stats', [AdminCustomerController::class, 'customerStat']);
             Route::post('/', [AdminCustomerController::class, 'index']);
+            Route::post('/active', [AdminCustomerController::class, 'activeCustomers']);
+            Route::post('/inactive', [AdminCustomerController::class, 'inactiveCustomers']);
+            Route::put('/update/status/{id}', [AdminCustomerController::class, 'updateCustomerStatus']);
             Route::get('/{id}', [AdminCustomerController::class, 'show']);
+
+        });
+
+        Route::group(['prefix' => 'complaints'], function () {
+            Route::post('/all', [AdminComplaintController::class, 'listAllComplaints']);
+            Route::get('/stats', [AdminComplaintController::class, 'complaintsStat']);
+            Route::get('/{id}', [AdminComplaintController::class, 'show']);
 
         });
 

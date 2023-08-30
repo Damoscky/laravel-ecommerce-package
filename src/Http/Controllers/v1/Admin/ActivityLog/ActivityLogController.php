@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use SbscPackage\Ecommerce\Helpers\ProcessAuditLog;
 use SbscPackage\Ecommerce\Responser\JsonResponser;
+use SbscPackage\Ecommerce\Exports\AuditLogsReportExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ActivityLogController extends BaseController
 {
@@ -17,9 +19,8 @@ class ActivityLogController extends BaseController
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $nameSearchParam = $request->username;
-        $alphabetically = $request->alphabetically;
-        $dateOldToNew = $request->date_old_to_new;
-        $dateNewToOld = $request->date_new_to_old;
+        $activitySearchParam = $request->activity;
+        $sortByRequestParam = $request->sort_by;
 
         $recordSearchParam = $request->searchByDate;
 
@@ -41,22 +42,35 @@ class ActivityLogController extends BaseController
 
         try {
             
-            $records = AuditLog::where('package_type', 'SbscPackage\Ecommerce')
+            $records = AuditLog::with('causer')->where('package_type', 'SbscPackage\Ecommerce')
                 ->when($nameSearchParam, function ($query, $nameSearchParam) use ($request) {
                     return $query->whereHas('causer', function ($query) use ($nameSearchParam) {
                         return $query->where('firstname', 'LIKE', '%' . $nameSearchParam . '%');
                     });
                 })->when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
                     return $query->where('created_at', '>=', $carbonDateFilter);
-                })->when($alphabetically, function ($query) {
-                    return $query->orderBy('description', 'ASC');
-                })->when($dateOldToNew, function ($query) {
-                    return $query->orderBy('created_at', 'asc');
-                })->when($dateNewToOld, function ($query) {
-                    return $query->orderBy('created_at', 'desc');
-                })->paginate(10);
+                })->when($activitySearchParam, function ($query) use ($activitySearchParam) {
+                    return $query->where('action', $activitySearchParam);
+                }) ->when($sortByRequestParam, function ($query) use ($request) {
+                    if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                        return $query->orderBy('action', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                        return $query->orderBy('created_at', 'asc');
+                    }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                        return $query->orderBy('created_at', 'desc');
+                    }else{
+                        return $query->orderBy('created_at', 'desc');
+                    }
+                });
 
-            return JsonResponser::send(false, 'Record found successfully', $records);
+                if(isset($request->export)){
+                    $records = $records->get();
+                    return Excel::download(new AuditLogsReportExport($records), 'auditlogsreportdata.xlsx');
+                }else{
+                    $records = $records->paginate(10);
+                    return JsonResponser::send(false, 'Record found successfully', $records, 200);
+                }
+
         } catch (\Throwable $error) {
             logger($error);
             return JsonResponser::send(true, $error->getMessage(), [], 500);

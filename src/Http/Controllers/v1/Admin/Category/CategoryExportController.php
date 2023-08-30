@@ -43,6 +43,8 @@ class CategoryExportController extends BaseController
                         return $query->orderBy('created_at', 'asc');
                     }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
                         return $query->orderBy('created_at', 'desc');
+                    }else{
+                        return $query->orderBy('created_at', 'desc');
                     }
                 })->when($dateSearchParams, function($query, $dateSearchParams) use($request) {
                     $startDate = Carbon::parse($request->start_date);

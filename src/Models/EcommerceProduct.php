@@ -12,6 +12,7 @@ class EcommerceProduct extends Model
      use SoftDeletes;
 
     protected $guarded = ['id'];
+    protected $with = ['category', 'subcategory', 'ecommerceVendor'];
 
     public function category()
     {
@@ -20,7 +21,12 @@ class EcommerceProduct extends Model
 
     public function subcategory()
     {
-        return $this->belongsTo(SubCategory::class);
+        return $this->belongsTo(SubCategory::class, 'sub_category_id');
+    }
+
+    public function ecommerceVendor()
+    {
+        return $this->belongsTo(EcommerceVendor::class, 'ecommerce_vendor_id');
     }
 
 }
