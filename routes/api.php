@@ -9,7 +9,10 @@ use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Product\ProductController AS
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\ActivityLog\ActivityLogController AS AdminActivityLogController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Customer\CustomerController AS AdminCustomerController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Complaint\ComplaintController AS AdminComplaintController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Plan\PlanController AS AdminPlanController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Vendor\RegisterController AS VendorRegisterController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\RegisterController AS CustomerRegisterController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\ProfileController AS CustomerProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,8 +39,15 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
     //Authentication Route
     Route::group(["prefix" => "vendor/auth"], function () {
         Route::post('register', [VendorRegisterController::class, 'register']);
-        // Route::post('login', [LoginController::class, 'login']);
-        // Route::get('logout', [LoginController::class, 'logout']);
+    });
+
+
+    // Vendor Route
+    Route::group(['prefix' => 'customer', "namespace" => "v1\Customer", 'middleware' => ["auth:api", "ecommercecustomer"]], function () {
+        Route::put('/profile/update', [CustomerProfileController::class, 'updateProfile']);
+        Route::put('/billing/update', [CustomerProfileController::class, 'updateBillingInfo']);
+        Route::put('/shipping/update', [CustomerProfileController::class, 'updateShippingInfo']);
+
     });
 
         // Vendor Route
@@ -128,6 +138,13 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::get('/stats', [AdminComplaintController::class, 'complaintsStat']);
             Route::get('/{id}', [AdminComplaintController::class, 'show']);
 
+        });
+
+        Route::group(['prefix' => 'plans'], function () {
+            Route::post('/all', [AdminPlanController::class, 'listAllPlan']);
+            Route::post('/create', [AdminPlanController::class, 'store']);
+            Route::put('/update/{id}', [AdminPlanController::class, 'update']);
+            Route::get('/{id}}', [AdminPlanController::class, 'show']);
         });
 
     });

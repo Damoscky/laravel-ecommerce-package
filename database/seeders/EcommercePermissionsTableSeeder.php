@@ -242,6 +242,37 @@ class EcommercePermissionsTableSeeder extends Seeder
                 'description' => 'Complaints Management',
                 'model'       => 'Permission',
             ],
+
+            [
+                'name'        => 'Can View EcommercePlan',
+                'slug'        => 'view.ecommerceplans',
+                'description' => 'EcommercePlan Management',
+                'model'       => 'Permission',
+            ],
+            [
+                'name'        => 'Can Create EcommercePlan',
+                'slug'        => 'create.ecommerceplans',
+                'description' => 'EcommercePlan Management',
+                'model'       => 'Permission',
+            ],
+            [
+                'name'        => 'Can Edit EcommercePlan',
+                'slug'        => 'edit.ecommerceplans',
+                'description' => 'EcommercePlan Management',
+                'model'       => 'Permission',
+            ],
+            [
+                'name'        => 'Can Delete EcommercePlan',
+                'slug'        => 'delete.ecommerceplans',
+                'description' => 'EcommercePlan Management',
+                'model'       => 'Permission',
+            ],
+            [
+                'name'        => 'Can Manage EcommercePlan',
+                'slug'        => 'manage.ecommerceplans',
+                'description' => 'EcommercePlan Management',
+                'model'       => 'Permission',
+            ],
         ];
 
         /*

@@ -31,6 +31,7 @@ class SubCategoryController extends BaseController
         $statusSearchParam = $request->status;
         $sortByRequestParam = $request->sort_by;
         $categorySearchParam = $request->category_id;
+        
 
         (!is_null($request->start_date) && !is_null($request->end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
 
@@ -127,6 +128,7 @@ class SubCategoryController extends BaseController
                 'action_id' => $subcategory->id,
                 'action_type' => "Models\SubCategory",
                 'log_name' => "SubCategory Pending Delete Successfully",
+                'action' => 'Delete',
                 'description' => "SubCategory Pending Delete Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -240,6 +242,7 @@ class SubCategoryController extends BaseController
                 'action_id' => $subCategory->id,
                 'action_type' => "Models\SubCategory",
                 'log_name' => "SubCategory created Successfully",
+                'action' => 'Create',
                 'description' => "SubCategory created Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -329,6 +332,7 @@ class SubCategoryController extends BaseController
                 'action_id' => $subcategory->id,
                 'action_type' => "Models\SubCategory",
                 'log_name' => "SubCategory updated Successfully",
+                'action' => 'Update',
                 'description' => "SubCategory updated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -389,6 +393,7 @@ class SubCategoryController extends BaseController
                 'action_id' => $subCategory->id,
                 'action_type' => "Models\SubCategory",
                 'log_name' => "SubCategory activated Successfully",
+                'action' => 'Manage',
                 'description' => "SubCategory activated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -425,6 +430,7 @@ class SubCategoryController extends BaseController
                 'action_id' => $subCategory->id,
                 'action_type' => "Models\SubCategory",
                 'log_name' => "SubCategory deleted Successfully",
+                'action' => 'Delete',
                 'description' => "SubCategory deleted Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
@@ -466,6 +472,7 @@ class SubCategoryController extends BaseController
                 'action_id' => $subCategory->id,
                 'action_type' => "Models\SubCategory",
                 'log_name' => "SubCategory deactivated Successfully",
+                'action' => 'Manage',
                 'description' => "SubCategory deactivated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
             ];
 
