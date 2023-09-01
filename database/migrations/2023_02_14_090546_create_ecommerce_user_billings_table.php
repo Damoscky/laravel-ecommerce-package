@@ -24,6 +24,7 @@ class CreateEcommerceUserBillingsTable extends Migration
             $table->string('country')->nullable();
             $table->string('state')->nullable();
             $table->string('city')->nullable();
+            $table->string('email')->nullable();
             $table->string('postal_code')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();

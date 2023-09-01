@@ -13,6 +13,7 @@ use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Plan\PlanController AS Admin
 use SbscPackage\Ecommerce\Http\Controllers\v1\Vendor\RegisterController AS VendorRegisterController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\RegisterController AS CustomerRegisterController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\ProfileController AS CustomerProfileController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Guest\ProductController AS GuestProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,12 +42,30 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
         Route::post('register', [VendorRegisterController::class, 'register']);
     });
 
+    //Guest Route
+    Route::group(['prefix' => 'guest', "namespace" => "v1\Guest"], function () {
+
+        Route::get('/categories', [GuestProductController::class, 'getAllCategoriesNoPagination']);
+         /** Guest Product Route ***/
+         Route::group(["prefix" => "products"], function () {
+            Route::get('/by-categories', [GuestProductController::class, 'getProductsByCategories']);
+            Route::post('/by-category/{id}', [GuestProductController::class, 'getProductsByCategoryId']);
+            Route::get('/featured', [GuestProductController::class, 'getAllFeaturedProducts']);
+            Route::get('/latest', [GuestProductController::class, 'getAllLatestProducts']);
+            Route::get('/bestselling', [GuestProductController::class, 'getAllBestsellingProducts']);
+            Route::get('/by-subcategories', [GuestProductController::class, 'getProductsBySubCategories']);
+            Route::get('/{id}', [GuestProductController::class, 'show']);
+
+        });
+    });
+
 
     // Vendor Route
     Route::group(['prefix' => 'customer', "namespace" => "v1\Customer", 'middleware' => ["auth:api", "ecommercecustomer"]], function () {
         Route::put('/profile/update', [CustomerProfileController::class, 'updateProfile']);
         Route::put('/billing/update', [CustomerProfileController::class, 'updateBillingInfo']);
         Route::put('/shipping/update', [CustomerProfileController::class, 'updateShippingInfo']);
+        Route::put('/password/update', [CustomerProfileController::class, 'updatePassword']);
 
     });
 

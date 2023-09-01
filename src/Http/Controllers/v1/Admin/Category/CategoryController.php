@@ -43,7 +43,7 @@ class CategoryController extends BaseController
         }
 
         try {
-            $records = Category::with('subcategory', 'product')
+            $records = Category::with('subcategory', 'ecommerceproduct')
             ->when($categorySearchParam, function($query, $categorySearchParam) use($request) {
                 return $query->where('name', 'LIKE', '%' .$categorySearchParam. '%');
             })->when($statusSearchParam, function($query, $statusSearchParam) use($request) {
