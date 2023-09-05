@@ -25,7 +25,7 @@ class CreateEcommerceOrderDetailsTable extends Migration
             $table->string('sub_category')->nullable();
             $table->string('brand_name')->nullable();
             $table->string('child_category')->nullable();
-            $table->decimal('shipping_fee')->nullable();
+            $table->integer('shipping_fee')->default(0);
             $table->string('tracking_number')->nullable();
             $table->string('sku')->nullable();
             $table->string('size')->nullable();

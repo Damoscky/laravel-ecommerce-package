@@ -13,6 +13,9 @@ use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Plan\PlanController AS Admin
 use SbscPackage\Ecommerce\Http\Controllers\v1\Vendor\RegisterController AS VendorRegisterController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\RegisterController AS CustomerRegisterController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\ProfileController AS CustomerProfileController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\CartController AS CustomerCartController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\WishlistController AS CustomerWishlistController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\OrderController AS CustomerOrderController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Guest\ProductController AS GuestProductController;
 
 /*
@@ -46,8 +49,10 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
     Route::group(['prefix' => 'guest', "namespace" => "v1\Guest"], function () {
 
         Route::get('/categories', [GuestProductController::class, 'getAllCategoriesNoPagination']);
+        Route::get('/sub-categories/{categoryId}', [GuestProductController::class, 'getAllSubCategoriesByCategoryIdNoPagination']);
          /** Guest Product Route ***/
          Route::group(["prefix" => "products"], function () {
+            Route::post('/all', [GuestProductController::class, 'getAllProducts']);
             Route::get('/by-categories', [GuestProductController::class, 'getProductsByCategories']);
             Route::post('/by-category/{id}', [GuestProductController::class, 'getProductsByCategoryId']);
             Route::get('/featured', [GuestProductController::class, 'getAllFeaturedProducts']);
@@ -66,6 +71,30 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
         Route::put('/billing/update', [CustomerProfileController::class, 'updateBillingInfo']);
         Route::put('/shipping/update', [CustomerProfileController::class, 'updateShippingInfo']);
         Route::put('/password/update', [CustomerProfileController::class, 'updatePassword']);
+
+        /*** Carts Route ***/
+        Route::group(['prefix' => 'carts'], function () {
+            Route::get('/', [CustomerCartController::class, 'index']);
+            Route::post('/', [CustomerCartController::class, 'store']);
+            Route::put('/{id}', [CustomerCartController::class, 'update']);
+            Route::post('/transfer', [CustomerCartController::class, 'transferCartUpdate']);
+            Route::delete('/{id}', [CustomerCartController::class, 'destroy']);
+        });
+
+        /*** Wishlist Route ***/
+        Route::group(['prefix' => 'wishlist'], function () {
+            Route::get('/', [CustomerWishlistController::class, 'index']);
+            Route::post('/', [CustomerWishlistController::class, 'store']);
+            Route::delete('/{id}', [CustomerWishlistController::class, 'destroy']);
+        });
+
+        /*** Order Route ***/
+        Route::group(['prefix' => 'orders'], function () {
+            Route::get('/all', [CustomerOrderController::class, 'index']);
+            Route::post('/store', [CustomerOrderController::class, 'store']);
+            Route::get('/', [CustomerOrderController::class, 'dashboard']);
+            Route::post('/validate-stock', [CustomerOrderController::class, 'checkStock']);
+        });
 
     });
 

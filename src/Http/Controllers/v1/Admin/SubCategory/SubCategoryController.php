@@ -44,7 +44,7 @@ class SubCategoryController extends BaseController
         }
 
         try {
-            $records = SubCategory::with('category', 'product')->when($subcategorySearchParam, function($query, $subcategorySearchParam) use($request) {
+            $records = SubCategory::with('category', 'ecommerceproduct')->when($subcategorySearchParam, function($query, $subcategorySearchParam) use($request) {
                 return $query->where('name', 'LIKE', '%' .$subcategorySearchParam. '%');
             })->when($categorySearchParam, function ($query, $categorySearchParam) use ($request) {
                 return $query->whereHas('category', function ($query) use ($categorySearchParam) {
@@ -163,7 +163,7 @@ class SubCategoryController extends BaseController
         }
 
         try {
-            $records = SubCategory::with('category', 'product')->when($subcategorySearchParam, function($query, $subcategorySearchParam) use($request) {
+            $records = SubCategory::with('category', 'ecommerceproduct')->when($subcategorySearchParam, function($query, $subcategorySearchParam) use($request) {
                 return $query->where('name', 'LIKE', '%' .$subcategorySearchParam. '%');
             })->when($categorySearchParam, function ($query, $categorySearchParam) use ($request) {
                 return $query->whereHas('category', function ($query) use ($categorySearchParam) {

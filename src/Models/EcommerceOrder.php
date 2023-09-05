@@ -21,6 +21,16 @@ class EcommerceOrder extends Model
         return $this->hasMany(EcommerceOrderDetails::class);
     }
 
+    public function ecommerceshippingaddress()
+    {
+        return $this->hasOne(EcommerceShippingAddress::class);
+    }
+
+    public function ecommercebillingdetails()
+    {
+        return $this->hasOne(EcommerceBillingDetails::class);
+    }
+
     // public function transactions()
     // {
     //     return $this->belongsTo(Transaction::class, "transaction_id");
