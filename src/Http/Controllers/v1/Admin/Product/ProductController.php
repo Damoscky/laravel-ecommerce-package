@@ -648,7 +648,7 @@ class ProductController extends BaseController
                 'sku' => $request->sku,
                 'minimum_purchase_per_quantity' => $request->minimum_purchase_per_quantity,
                 'quantity_supplied' => $request->quantity_supplied,
-                'quantity_purchased' => $request->quantity_supplied,
+                'quantity_purchased' => $product->quantity_supplied,
                 'available_quantity' => $request->quantity_supplied,
                 'regular_price' => $request->regular_price,
                 'sales_price' => $request->sales_price,
@@ -663,6 +663,7 @@ class ProductController extends BaseController
                 'product_image2' =>  $image2,
                 'product_image3' =>  $image3,
                 'product_image4' =>  $image4,
+                'in_stock' => 1, 
                 'is_active' => false,
                 'status' => ProductStatusInterface::PENDINGAPPROVAL,
             ]);

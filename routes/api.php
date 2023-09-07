@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Dashboard\DashboardController AS AdminDashboardController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Category\CategoryController AS AdminCategoryController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\SubCategory\SubCategoryController AS AdminSubCategoryController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Product\ProductController AS AdminProductController;
@@ -10,6 +11,7 @@ use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\ActivityLog\ActivityLogContr
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Customer\CustomerController AS AdminCustomerController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Complaint\ComplaintController AS AdminComplaintController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Plan\PlanController AS AdminPlanController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Order\OrderController AS AdminOrderController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Vendor\RegisterController AS VendorRegisterController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\RegisterController AS CustomerRegisterController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\ProfileController AS CustomerProfileController;
@@ -17,6 +19,7 @@ use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\CartController AS Custome
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\WishlistController AS CustomerWishlistController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\OrderController AS CustomerOrderController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Guest\ProductController AS GuestProductController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Guest\SubscriptionController AS GuestSubscriptionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +51,8 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
     //Guest Route
     Route::group(['prefix' => 'guest', "namespace" => "v1\Guest"], function () {
 
+        Route::post('/subscribe', [GuestSubscriptionController::class, 'newsletterSubscription']);
+        
         Route::get('/categories', [GuestProductController::class, 'getAllCategoriesNoPagination']);
         Route::get('/sub-categories/{categoryId}', [GuestProductController::class, 'getAllSubCategoriesByCategoryIdNoPagination']);
          /** Guest Product Route ***/
@@ -77,22 +82,23 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::get('/', [CustomerCartController::class, 'index']);
             Route::post('/', [CustomerCartController::class, 'store']);
             Route::put('/{id}', [CustomerCartController::class, 'update']);
-            Route::post('/transfer', [CustomerCartController::class, 'transferCartUpdate']);
+            Route::post('/transfer/update', [CustomerCartController::class, 'transferCartUpdate']);
             Route::delete('/{id}', [CustomerCartController::class, 'destroy']);
         });
 
-        /*** Wishlist Route ***/
+         /*** Wishlist Route ***/
         Route::group(['prefix' => 'wishlist'], function () {
             Route::get('/', [CustomerWishlistController::class, 'index']);
             Route::post('/', [CustomerWishlistController::class, 'store']);
             Route::delete('/{id}', [CustomerWishlistController::class, 'destroy']);
         });
-
-        /*** Order Route ***/
+        
+         /*** Order Route ***/
         Route::group(['prefix' => 'orders'], function () {
-            Route::get('/all', [CustomerOrderController::class, 'index']);
+            Route::get('/details/{id}', [CustomerOrderController::class, 'orderdetails']);
+            Route::post('/all', [CustomerOrderController::class, 'index']);
             Route::post('/store', [CustomerOrderController::class, 'store']);
-            Route::get('/', [CustomerOrderController::class, 'dashboard']);
+            Route::get('/dashboard', [CustomerOrderController::class, 'dashboard']);
             Route::post('/validate-stock', [CustomerOrderController::class, 'checkStock']);
         });
 
@@ -105,6 +111,7 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
     });
     // 'middleware' => ["core", "admin"]
     Route::group(['prefix' => 'admin', "namespace" => "v1\Admin", 'middleware' => ["auth:api", "ecommerceadmin"]], function () {
+        Route::post('/dashboard', [AdminDashboardController::class, 'dashboard']);
 
 
          /** Admin Category Route ***/
@@ -193,6 +200,10 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::post('/create', [AdminPlanController::class, 'store']);
             Route::put('/update/{id}', [AdminPlanController::class, 'update']);
             Route::get('/{id}}', [AdminPlanController::class, 'show']);
+        });
+
+        Route::group(['prefix' => 'orders'], function () {
+            Route::post('/', [AdminOrderController::class, 'index']);
         });
 
     });

@@ -39,13 +39,37 @@ class OrderController extends BaseController
 	 *
 	 * @return \Illuminate\Http\Response
 	 */
-	public function index()
+	public function index(Request $request)
 	{
 		try {
 			$currentUserInstance = UserMgtHelper::userInstance();
 			$userId = $currentUserInstance->id;
+            $orderNoSearchParam = $request->orderNo;
 
-			$orders = EcommerceOrder::latest()->where('user_id', $userId)->with('ecommerceorderdetails', 'ecommerceshippingaddress', 'ecommerceorderdetails', 'user')->paginate(10);
+			$orders = EcommerceOrder::when($orderNoSearchParam, function ($query) use ($orderNoSearchParam) {
+                return $query->where('orderID', 'LIKE', '%' . $orderNoSearchParam . '%');
+            })->latest()->where('user_id', $userId)->with('ecommerceorderdetails', 'ecommerceshippingaddress', 'ecommerceorderdetails', 'user')->paginate(10);
+
+			return JsonResponser::send(false, "Record found successfully", $orders, 200);
+		} catch (\Throwable $error) {
+			return JsonResponser::send(true, $error->getMessage(), []);
+		}
+	}
+
+    /**
+	 * Order Details
+	 */
+	public function orderdetails($id)
+	{
+
+		$userInstance = UserMgtHelper::userInstance();
+		$userId = $userInstance->id;
+
+		try {
+			$currentUserInstance = UserMgtHelper::userInstance();
+			$userId = $currentUserInstance->id;
+
+			$orders = EcommerceOrder::where('id', $id)->where('user_id', $userId)->with('ecommerceorderdetails', 'ecommerceshippingaddress', 'ecommercebillingdetails', 'ecommerceorderdetails', 'user')->first();
 
 			return JsonResponser::send(false, "Record found successfully", $orders, 200);
 		} catch (\Throwable $error) {
@@ -534,34 +558,6 @@ class OrderController extends BaseController
 
 		return false;
 	}
-	/**
-	 * Order Details
-	 */
-	public function orderdetails($id)
-	{
-
-		$userInstance = UserMgtHelper::userInstance();
-		$userId = $userInstance->id;
-
-		try {
-			$orders = OrderDetails::where('id', $id)->where("user_id", $userId)->with('order.shippingaddress', 'histories')
-				->with(['product' => function ($query) {
-					$query->select("id", "category_id", "product_name", "product_description", "product_image", "in_stock", "old_price", "new_price");
-				}])->with(['user' => function ($query) {
-					$query->select("id", "firstname", "lastname", "image");
-				}])->first();
-
-			if (!$orders) {
-				return JsonResponser::send(true, 'Order! not found', null, 404);
-			}
-
-			return JsonResponser::send(false, 'Record found successfully', $orders, 200);
-		} catch (\Throwable $error) {
-			return JsonResponser::send(true, $error->getMessage(), []);
-		}
-	}
-
-
 
 	public function validateOrder($request)
 	{
