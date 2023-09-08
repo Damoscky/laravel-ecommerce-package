@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Validator;
 use Hash, DB;
 use Carbon\Carbon;
 use SbscPackage\Ecommerce\Models\EcommerceCard;
+use SbscPackage\Ecommerce\Models\EcommerceComplaint;
 use SbscPackage\Ecommerce\Models\EcommerceOrder;
 use SbscPackage\Ecommerce\Models\EcommerceOrderDetails;
 use SbscPackage\Ecommerce\Models\EcommerceTransaction;
@@ -719,5 +720,97 @@ class OrderController extends BaseController
 		return $result = $stripe->paymentIntents->retrieve($paymentIntent, []);
 		// return $result['charges']['data'][0]['payment_method_details']['type'];
 	}
+
+	public function complaints(Request $request)
+	{
+        $searchParam = $request->complaint_id;
+
+		$currentUserInstance = auth()->user();
+
+		$records = EcommerceComplaint::when($searchParam, function ($query) use ($searchParam) {
+			return $query->where('id', 'LIKE', '%' . $searchParam . '%');
+		})->where('user_id', $currentUserInstance->id)->paginate(12);
+
+		return JsonResponser::send(false, "Record found Successfully", $records, 200);
+
+	}
+
+	public function createComplain(Request $request)
+	{
+		try {
+			/**
+			 * Validate Data
+			 */
+			$validate = $this->validatComplainRequest($request);
+			/**
+			 * if validation fails
+			 */
+			if ($validate->fails()) {
+				return JsonResponser::send(true, $validate->errors()->first(), $validate->errors()->all(), 400);
+			}
+			DB::beginTransaction();
+			
+			$attachment = FileUploadHelper::singleStringFileUpload($request->attachment, "EcommerceComplain");
+			
+			$currentUserInstance = auth()->user();
+
+			if(is_array($request->order_ids)){
+				foreach ($request->order_ids as $orderId) {
+
+					//check if order has been complained 
+					$complaint = EcommerceComplaint::where('user_id', $currentUserInstance->id)
+					->where('ecommerce_order_details_id', $orderId)->first();
+					if(!is_null($complaint)){
+						return JsonResponser::send(true, "One or more item has already been sent for complaint", [], 400);
+					}
+
+					$newComplain = EcommerceComplaint::create([
+						'ecommerce_order_details_id' => $orderId,
+						'user_id' => $currentUserInstance->id,
+						'reason' => $request->reason,
+						'customer_comment' => $request->comment,
+						'attachment' => $attachment,
+						'sales_officer' => $request->sales_officer,
+						'is_active' => true
+					]);
+
+					$dataToLog = [
+						'causer_id' => auth()->user()->id,
+						'action_id' => $orderId,
+						'action_type' => "Models\EcommerceComplaint",
+						'log_name' => "Complaint Submitted Successfully",
+						'action' => 'Create',
+						'description' => "Complaint Request Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+					];
+				}
+			}
+
+			DB::commit();
+
+			return JsonResponser::send(false, "Complaint Request Submited Successfully", [], 200);
+
+			
+		} catch (\Throwable $th) {
+			DB::rollBack();
+			return JsonResponser::send(true, $th->getMessage(), [], 500);
+		}
+	}
+
+	/**
+     * Validate profile request
+     */
+    protected function validatComplainRequest($request)
+    {
+        $rules = [
+            'order_ids' => 'required|array',
+            'reason' => 'required|string',
+            'comment' => 'required|string|min:5',
+            'attachment' => 'required',
+        ];
+
+
+        $validatedData = Validator::make($request->all(), $rules);
+        return $validatedData;
+    }
 
 }

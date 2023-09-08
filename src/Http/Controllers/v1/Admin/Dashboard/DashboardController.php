@@ -181,7 +181,7 @@ class DashboardController extends BaseController
             ->whereMonth('created_at', $month)
             ->count();
 
-            $revenueStat[date('F', mktime(0, 0, 0, $month, 10))] = ["revenueSales" => $revenueSales, "orders" => $orders, 'customers' => $customers];
+            $revenueStat[date('F', mktime(0, 0, 0, $month, 10))] = ["orders" => $orders, 'customers' => $customers];
         }
 
         $data = [

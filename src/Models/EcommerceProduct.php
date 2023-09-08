@@ -24,6 +24,11 @@ class EcommerceProduct extends Model
         return $this->belongsTo(SubCategory::class, 'sub_category_id');
     }
 
+    public function ecommerceorderdetails()
+    {
+        return $this->hasMany(EcommerceOrderDetails::class);
+    }
+
     public function ecommerceVendor()
     {
         return $this->belongsTo(EcommerceVendor::class, 'ecommerce_vendor_id');

@@ -206,14 +206,14 @@ class EcommercePermissionsTableSeeder extends Seeder
 
             [
                 'name'        => 'Can View Reports',
-                'slug'        => 'view.reports',
-                'description' => 'Report Management',
+                'slug'        => 'view.ecommercereports',
+                'description' => 'Ecommerce Report Management',
                 'model'       => 'Permission',
             ],
             [
                 'name'        => 'Can Export Reports',
-                'slug'        => 'export.reports',
-                'description' => 'Report Management',
+                'slug'        => 'export.ecommercereports',
+                'description' => 'Ecommerce Report Management',
                 'model'       => 'Permission',
             ],
 

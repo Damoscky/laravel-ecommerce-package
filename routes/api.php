@@ -12,6 +12,7 @@ use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Customer\CustomerController 
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Complaint\ComplaintController AS AdminComplaintController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Plan\PlanController AS AdminPlanController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Order\OrderController AS AdminOrderController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Report\ReportController AS AdminReportController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Vendor\RegisterController AS VendorRegisterController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\RegisterController AS CustomerRegisterController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\ProfileController AS CustomerProfileController;
@@ -100,6 +101,8 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::post('/store', [CustomerOrderController::class, 'store']);
             Route::get('/dashboard', [CustomerOrderController::class, 'dashboard']);
             Route::post('/validate-stock', [CustomerOrderController::class, 'checkStock']);
+            Route::post('/create/complaint', [CustomerOrderController::class, 'createComplain']);
+            Route::post('/complaints', [CustomerOrderController::class, 'complaints']);
         });
 
     });
@@ -204,6 +207,14 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
 
         Route::group(['prefix' => 'orders'], function () {
             Route::post('/', [AdminOrderController::class, 'index']);
+            Route::get('/{id}', [AdminOrderController::class, 'show']);
+            Route::put('/update/{id}', [AdminOrderController::class, 'update']);
+        });
+
+        Route::group(['prefix' => 'reports'], function () {
+            Route::post('/products', [AdminReportController::class, 'products']);
+            Route::post('/orders', [AdminReportController::class, 'orders']);
+            Route::post('/customers', [AdminReportController::class, 'orders']);
         });
 
     });

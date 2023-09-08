@@ -8,6 +8,7 @@ use SbscPackage\Ecommerce\Helpers\ProcessAuditLog;
 use SbscPackage\Ecommerce\Responser\JsonResponser;
 use Maatwebsite\Excel\Facades\Excel;
 use SbscPackage\Ecommerce\Exports\PlanReportExport;
+use SbscPackage\Ecommerce\Services\Paystack;
 use Illuminate\Support\Facades\Validator;
 use Session;
 use Illuminate\Support\Facades\DB;
@@ -90,12 +91,27 @@ class PlanController extends BaseController
             }
 
             $currentUserInstance = UserMgtHelper::userInstance();
+            
 
             DB::beginTransaction();
+
+            $paystackData = [
+                'name' => $request->name,
+                'interval' => $request->interval,
+                'amount' => $request->price * 100,
+                'currency' => 'NGN',
+            ];
+
+            $result = Paystack::createPlan($paystackData);
+            if ($result["status"] !== true) {
+                return JsonResponser::send(true, $result['message'], [], 400);
+            }
 
             $plan = EcommercePlan::create([
                 'name' => $request->name,
                 'description' => $request->description,
+                'plan_code' => $result["data"]["plan_code"],
+                'currency' => $result["data"]["currency"],
                 'interval' => $request->interval,
                 'price' => $request->price,
                 'created_by' => $currentUserInstance->id,
@@ -208,6 +224,19 @@ class PlanController extends BaseController
         try {
             DB::beginTransaction();
             $isActive = ($request->status == "Active") ? 1 : 0;
+
+            $planCode = $plan->plan_code;
+
+            $paystackData = [
+                'name' => $request->name,
+                'interval' => $request->interval,
+                'amount' => $request->price * 100
+            ];
+
+            $result = Paystack::updatePlan($paystackData, $planCode);
+            if ($result["status"] !== true) {
+                return JsonResponser::send(true, $result['message'], [], 400);
+            }
 
             $plan->update([
                 'name' => $request->name,

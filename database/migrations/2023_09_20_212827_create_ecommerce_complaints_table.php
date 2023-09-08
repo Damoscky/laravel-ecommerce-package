@@ -20,6 +20,7 @@ return new class extends Migration
             $table->mediumText('attachment')->nullable();
             $table->boolean('is_active')->default(false);
             $table->string('status')->default("Pending");
+            $table->string('sales_officer')->nullable();
             $table->boolean('priority')->default(false);
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('ecommerce_order_details_id')->references('id')->on('ecommerce_order_details')->onDelete('cascade');

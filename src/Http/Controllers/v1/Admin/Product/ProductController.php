@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 use SbscPackage\Ecommerce\Helpers\UserMgtHelper;
 use SbscPackage\Ecommerce\Interfaces\ProductStatusInterface;
 use SbscPackage\Ecommerce\Helpers\FileUploadHelper;
+use SbscPackage\Ecommerce\Models\EcommerceOrderDetails;
 use SbscPackage\Ecommerce\Models\EcommerceVendor;
 
 class ProductController extends BaseController
@@ -68,7 +69,7 @@ class ProductController extends BaseController
 
             if(isset($request->export)){
                 $products = $products->get();
-                return Excel::download(new ProductReportExport($products), 'categoriesreportdata.xlsx');
+                return Excel::download(new ProductReportExport($products), 'productreportdata.xlsx');
             }else{
                 $products = $products->paginate(12);
                 return JsonResponser::send(false, 'Record found successfully', $products, 200);
@@ -880,6 +881,12 @@ class ProductController extends BaseController
         try {
 
             $currentUserInstance = UserMgtHelper::userInstance();
+
+            //check if product is already ordered
+            $orederDetails = EcommerceOrderDetails::where('ecommerce_product_id', $id)->get();
+            if(count($orederDetails) > 0){
+                return JsonResponser::send(true, 'Unable to delete record. Product attached to an ordered', null, 400);
+            }
 
             $dataToLog = [
                 'causer_id' => $currentUserInstance->id,

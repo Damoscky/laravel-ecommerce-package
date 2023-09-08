@@ -16,6 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('created_by')->nullable();
             $table->string('name');
             $table->mediumText('description')->nullable();
+            $table->string('plan_code')->nullable();
+            $table->string('currency')->nullable();
             $table->string('interval')->nullable();
             $table->decimal('price', 15, 2);
             $table->boolean('is_active')->default(true);

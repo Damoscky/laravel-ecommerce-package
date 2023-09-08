@@ -6,10 +6,10 @@ use Illuminate\Routing\Controller as BaseController;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use DB;
+use DB, Validator;
 use SbscPackage\Ecommerce\Helpers\ProcessAuditLog;
 use SbscPackage\Ecommerce\Responser\JsonResponser;
-use SbscPackage\Ecommerce\Exports\AuditLogsReportExport;
+use SbscPackage\Ecommerce\Exports\OrderExportReport;
 use Maatwebsite\Excel\Facades\Excel;
 use SbscPackage\Ecommerce\Interfaces\ProductStatusInterface;
 use SbscPackage\Ecommerce\Models\EcommerceOrderDetails;
@@ -51,10 +51,10 @@ class OrderController extends BaseController
         }
 
         try {
-            $pendingOrder = EcommerceOrder::where('status', OrderStatusInterface::PENDING)->count();
-            $completedOrder = EcommerceOrder::where('status', OrderStatusInterface::DELIVERED)->count();
-            $processingOrder = EcommerceOrder::where('status', OrderStatusInterface::PROCESSING)->count();
-            $cancelledOrder = EcommerceOrder::where('status', OrderStatusInterface::CANCELLED)->count();
+            $totalOrders = EcommerceOrder::count();
+            $completedOrders = EcommerceOrder::where('status', OrderStatusInterface::DELIVERED)->count();
+            $processingOrders = EcommerceOrder::where('status', OrderStatusInterface::PROCESSING)->count();
+            $cancelledOrders = EcommerceOrder::where('status', OrderStatusInterface::CANCELLED)->count();
 
 
             $orders = EcommerceOrder::when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
@@ -81,14 +81,21 @@ class OrderController extends BaseController
                 $startDate = Carbon::parse($request->start_date);
                 $endDate = Carbon::parse($request->end_date);
                 return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
-            })->paginate(10);
+            });
+
+            if(isset($request->export)){
+                $orders = $orders->get();
+                return Excel::download(new OrderExportReport($orders), 'orderreportdata.xlsx');
+            }else{
+                $orders = $orders->paginate(12);
+            }
 
             $data = [
                 'orders' => $orders,
-                'pendingOrder' => $pendingOrder,
-                'completedOrder' => $completedOrder,
-                'processingOrder' => $processingOrder,
-                'cancelledOrder' => $cancelledOrder,
+                'totalOrders' => $totalOrders,
+                'completedOrders' => $completedOrders,
+                'processingOrders' => $processingOrders,
+                'cancelledOrders' => $cancelledOrders,
             ];
 
             return JsonResponser::send(false, 'Record(s) found successfully', $data, 200);
@@ -98,5 +105,90 @@ class OrderController extends BaseController
         }
     }
 
+
+    public function show($id)
+    {
+        $record = EcommerceOrder::with('ecommerceorderdetails.ecommerceproduct', 'ecommerceshippingaddress', 'ecommercebillingdetails')->where('id', $id)->first();
+        return JsonResponser::send(false, 'Record(s) found successfully', $record, 200);
+
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $order = EcommerceOrder::find($id);
+        // $order = OrderDetails::find($id);
+
+        if (!$order) {
+            return JsonResponser::send(true, 'Order Not Found', null);
+        }
+
+        /**
+         * Validate Request
+         */
+        $validate = $this->validateOrder($request);
+        /**
+         * if validation fails
+         */
+        if ($validate->fails()) {
+            return JsonResponser::send(true, 'Validation failed', $validate->errors()->all());
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $order->update([
+                'status' => $request->status,
+            ]);
+
+            foreach ($order->ecommerceorderdetails as $details) {
+                $details->update([
+                    'status' => $request->status
+                ]);
+            }
+
+            // $data = [
+            //     'orderID' => $order->orderID,
+            //     'orderdetails' => $order->orderdetails,
+            //     'name' => $order->firstname,
+            //     'orders' => $order,
+            //     'email' => $order->email,
+            // ];
+
+            // if ($request->status === OrderStatusInterface::PROCESSING) {
+            //     Mail::to($data['email'])->send(new ProcessingOrderEmail($data));
+            // } elseif ($request->status === OrderStatusInterface::ENROUTE) {
+            //     Mail::to($data['email'])->send(new ShippedOrderEmail($data));
+            // } elseif ($request->status === OrderStatusInterface::COMPLETED) {
+            //     Mail::to($data['email'])->send(new CompletedOrderEmail($data));
+            // } elseif ($request->status === OrderStatusInterface::CANCELLED) {
+            //     Mail::to($data['email'])->send(new CancelledOrderEmail($data));
+            // }
+
+            DB::commit();
+            return JsonResponser::send(false, 'Order Updated Successfully!', $order, 201);
+        } catch (\Throwable $error) {
+            logger($error);
+            DB::rollback();
+            // return JsonResponser::send(true, 'Internal server error', null, 500);
+            return JsonResponser::send(true, $error->getMessage(), null, 500);
+        }
+    }
+
+    public function validateOrder(Request $request)
+    {
+        $rules = [
+            // "status" => "in:received|cancelled|shipped"
+            "status" => "required"
+        ];
+        $validateOrder = Validator::make($request->all(), $rules);
+        return $validateOrder;
+    }
 
 }

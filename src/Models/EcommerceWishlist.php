@@ -18,6 +18,6 @@ class EcommerceWishlist extends Model
 
     public function ecommerceproduct()
     {
-        return $this->belongsTo(EcommerceProduct::class);
+        return $this->belongsTo(EcommerceProduct::class, 'ecommerce_product_id');
     }
 }

@@ -231,4 +231,47 @@ class Paystack
     {
         return $this->getResponse()['data'];
     }
+
+
+    public static function createPlan($request)
+    {
+        // generate access token
+        $baseUrl = env('PAYSTACK_PAYMENT_URL');
+        $url = $baseUrl.'/plan';
+
+        $headerParams = [
+            'Authorization: Bearer '. env('PAYSTACK_SECRET_KEY'),
+        ];
+
+        // Make post request
+        return $result = CurlService::postRequest($url, $request, $headerParams);
+    }
+
+    public static function updatePlan($request, $planCode)
+    {
+        // generate access token
+        $baseUrl = env('PAYSTACK_PAYMENT_URL');
+        $url = $baseUrl."/plan"."/".$planCode;
+
+        $headerParams = [
+            'Authorization: Bearer '. env('PAYSTACK_SECRET_KEY'),
+        ];
+
+        // Make post request
+        return $result = CurlService::putRequest($url, $request, $headerParams);
+    }
+
+    public static function createCustomer($request)
+    {
+        // generate access token
+        $baseUrl = env('PAYSTACK_PAYMENT_URL');
+        $url = $baseUrl.'/customer';
+
+        $headerParams = [
+            'Authorization: Bearer '. env('PAYSTACK_SECRET_KEY'),
+        ];
+
+        // Make post request
+        return $result = CurlService::postRequest($url, $request, $headerParams);
+    }
 }

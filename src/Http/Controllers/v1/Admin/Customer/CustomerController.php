@@ -84,7 +84,7 @@ class CustomerController extends BaseController
                 return $roleTable->where('slug', $roleName);
             })->when($sortByRequestParam, function ($query) use ($request) {
                 if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
-                    return $query->orderBy('product_name', 'asc');
+                    return $query->orderBy('firstname', 'asc');
                 }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
                     return $query->orderBy('created_at', 'asc');
                 }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){

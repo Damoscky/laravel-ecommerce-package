@@ -250,13 +250,15 @@ class ProductController extends BaseController
     public function getAllBestsellingProducts()
     {
         try {
-            $bestsellerproducts = EcommerceOrderDetails::select('ecommerce_product_id')->groupBy('ecommerce_product_id')->orderByRaw('COUNT(*) DESC')->with('ecommerceproduct')->take(4)->get();
+            $bestsellerproducts = EcommerceOrderDetails::with('ecommerceproduct')->select('ecommerce_product_id')->groupBy('ecommerce_product_id')->orderByRaw('COUNT(*) DESC')->take(4)->get();
              // Check if the user is signed in and has the product in their wishlist
              $user = auth()->user();
              if ($user) {
                  foreach ($bestsellerproducts as $record) {
                      $wishlist = $user->userecommercewishlist()->where('ecommerce_product_id', $record->id)->exists();
-                     $record->ecommerceproduct->wishlist = $wishlist;
+                     if($wishlist){
+                        $record->ecommerceproduct->wishlist = $wishlist;
+                     }
                  }
              }else{
                  $bestsellerproducts->wishlist = false;
