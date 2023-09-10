@@ -22,7 +22,7 @@ class CategoryController extends BaseController
 {
     public function index(Request $request)
     {
-        if(!auth()->user()->hasPermission('view.category')){
+        if(!auth()->user()->hasPermission('view.ecommercecategory')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -96,7 +96,7 @@ class CategoryController extends BaseController
      */
     public function store(Request $request)
     {
-        if(!auth()->user()->hasPermission('create.category')){
+        if(!auth()->user()->hasPermission('create.ecommercecategory')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -163,7 +163,7 @@ class CategoryController extends BaseController
      */
     public function show($id)
     {
-        if(!auth()->user()->hasPermission('view.category')){
+        if(!auth()->user()->hasPermission('view.ecommercecategory')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -189,7 +189,7 @@ class CategoryController extends BaseController
      */
     public function update(Request $request, $id)
     {
-        if(!auth()->user()->hasPermission('edit.category')){
+        if(!auth()->user()->hasPermission('edit.ecommercecategory')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -274,7 +274,7 @@ class CategoryController extends BaseController
      */
     public function activate($id)
     {
-        if(!auth()->user()->hasPermission('manage.category')){
+        if(!auth()->user()->hasPermission('manage.ecommercecategory')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $category = Category::find($id);
@@ -316,7 +316,7 @@ class CategoryController extends BaseController
      */
     public function approveDeletedCategory($id)
     {
-        if(!auth()->user()->hasPermission('manage.category')){
+        if(!auth()->user()->hasPermission('manage.ecommercecategory')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $category = Category::find($id);
@@ -356,7 +356,7 @@ class CategoryController extends BaseController
      */
     public function deactivate($id)
     {
-        if(!auth()->user()->hasPermission('manage.category')){
+        if(!auth()->user()->hasPermission('manage.ecommercecategory')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $category = Category::find($id);
@@ -399,7 +399,7 @@ class CategoryController extends BaseController
      */
     public function deleteCategory($id)
     {
-        if(!auth()->user()->hasPermission('delete.category')){
+        if(!auth()->user()->hasPermission('delete.ecommercecategory')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $category = Category::find($id);
@@ -494,7 +494,7 @@ class CategoryController extends BaseController
 
     public function pendingCategory(Request $request)
     {
-        if(!auth()->user()->hasPermission('view.category')){
+        if(!auth()->user()->hasPermission('view.ecommercecategory')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -591,7 +591,7 @@ class CategoryController extends BaseController
 
     public function approvedCategory(Request $request)
     {
-         if(!auth()->user()->hasPermission('manage.category')){
+         if(!auth()->user()->hasPermission('manage.ecommercecategory')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $categorySearchParam = $request->category_name;

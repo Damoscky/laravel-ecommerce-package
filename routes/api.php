@@ -113,7 +113,7 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
 
     });
     // 'middleware' => ["core", "admin"]
-    Route::group(['prefix' => 'admin', "namespace" => "v1\Admin", 'middleware' => ["auth:api", "ecommerceadmin"]], function () {
+    Route::group(['prefix' => 'admin', "namespace" => "v1\Admin", 'middleware' => ["auth:api", "ecommercesuperadmin"]], function () {
         Route::post('/dashboard', [AdminDashboardController::class, 'dashboard']);
 
 
@@ -214,7 +214,7 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
         Route::group(['prefix' => 'reports'], function () {
             Route::post('/products', [AdminReportController::class, 'products']);
             Route::post('/orders', [AdminReportController::class, 'orders']);
-            Route::post('/customers', [AdminReportController::class, 'orders']);
+            Route::post('/customers', [AdminReportController::class, 'customers']);
         });
 
     });

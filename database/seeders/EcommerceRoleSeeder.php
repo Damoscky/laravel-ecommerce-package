@@ -67,7 +67,24 @@ class EcommerceRoleSeeder extends Seeder
         $ecommerceSuperAdminRole = config('roles.models.role')::where('name', '=', 'Ecommerce Super Admin')->first();
         $ecommerceCustomerRole = config('roles.models.role')::where('name', '=', 'Ecommerce Customer')->first();
         $ecommerceVendorRole = config('roles.models.role')::where('name', '=', 'Ecommerce Vendor')->first();
-        $permissions = config('roles.models.permission')::all();
+        
+        $superAdminpermissions = config('roles.models.permission')::all();
+
+        $adminPermission = config('roles.models.permission')::where('description', '=', 'Ecommerce Product Management')
+            ->orWhere('description', '=', 'Ecommerce Category Management')
+            ->orWhere('description', '=', 'Ecommerce Subcategory Management')
+            ->orWhere('description', '=', 'Ecommerce Customers Management')
+            ->orWhere('description', '=', 'Ecommerce Order Management')
+            ->orWhere('description', '=', 'Ecommerce Vendor Management')
+            ->orWhere('description', '=', 'Ecommerce AuditLog Management')
+            ->orWhere('description', '=', 'Ecommerce Complaints Management')
+            ->orWhere('description', '=', 'Ecommerce Report Management')
+            ->get();
+
+        $vendorPermission = config('roles.models.permission')::where('description', '=', 'Ecommerce Product Management')
+            ->orWhere('description', '=', 'Ecommerce Order Management')
+            ->orWhere('description', '=', 'Ecommerce Report Management')
+            ->get();
 
         if (User::where('email', '=', 'ecommerceadmin@fanerp.com')->first() === null) {
             $newUser = User::create([
@@ -84,7 +101,7 @@ class EcommerceRoleSeeder extends Seeder
             ]);
 
             $newUser->attachRole($ecommerceAdminRole);
-            foreach ($permissions as $permission) {
+            foreach ($adminPermission as $permission) {
                 $newUser->attachPermission($permission);
             }
         }
@@ -104,7 +121,7 @@ class EcommerceRoleSeeder extends Seeder
             ]);
 
             $newUser->attachRole($ecommerceSuperAdminRole);
-            foreach ($permissions as $permission) {
+            foreach ($superAdminpermissions as $permission) {
                 $newUser->attachPermission($permission);
             }
         }
@@ -126,6 +143,9 @@ class EcommerceRoleSeeder extends Seeder
             ]);
 
             $newUser->attachRole($ecommerceVendorRole);
+            foreach ($vendorPermission as $permission) {
+                $newUser->attachPermission($permission);
+            }
             
         }
 

@@ -20,7 +20,7 @@ class CustomerController extends BaseController
 {
     public function index(Request $request)
     {
-        if(!auth()->user()->hasPermission('view.customers')){
+        if(!auth()->user()->hasPermission('view.ecommercecustomers')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -67,7 +67,7 @@ class CustomerController extends BaseController
 
     public function activeCustomers(Request $request)
     {
-        if(!auth()->user()->hasPermission('view.customers')){
+        if(!auth()->user()->hasPermission('view.ecommercecustomers')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -114,7 +114,7 @@ class CustomerController extends BaseController
 
     public function inactiveCustomers(Request $request)
     {
-        if(!auth()->user()->hasPermission('view.customers')){
+        if(!auth()->user()->hasPermission('view.ecommercecustomers')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -161,7 +161,7 @@ class CustomerController extends BaseController
 
     public function show($id)
     {
-        if(!auth()->user()->hasPermission('view.customers')){
+        if(!auth()->user()->hasPermission('view.ecommercecustomers')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         
@@ -177,7 +177,7 @@ class CustomerController extends BaseController
 
     public function updateCustomerStatus(Request $request, $id)
     {
-        if(!auth()->user()->hasPermission('edit.customers')){
+        if(!auth()->user()->hasPermission('edit.ecommercecustomers')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         

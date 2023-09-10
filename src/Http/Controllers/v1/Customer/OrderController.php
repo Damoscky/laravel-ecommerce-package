@@ -802,7 +802,7 @@ class OrderController extends BaseController
     protected function validatComplainRequest($request)
     {
         $rules = [
-            'order_ids' => 'required|array',
+			'order_ids' => 'required|array',
             'reason' => 'required|string',
             'comment' => 'required|string|min:5',
             'attachment' => 'required',

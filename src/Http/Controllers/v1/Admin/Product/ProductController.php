@@ -203,7 +203,7 @@ class ProductController extends BaseController
      */
     public function listAllRequestProducts(Request $request)
     {
-        if(!auth()->user()->hasPermission('view.products')){
+        if(!auth()->user()->hasPermission('manage.products')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -261,7 +261,7 @@ class ProductController extends BaseController
      */
     public function listAllDeleteRequestProducts(Request $request)
     {
-        if(!auth()->user()->hasPermission('view.products')){
+        if(!auth()->user()->hasPermission('manage.products')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -318,7 +318,7 @@ class ProductController extends BaseController
      */
     public function listAllPendingRequestProducts(Request $request)
     {
-        if(!auth()->user()->hasPermission('view.products')){
+        if(!auth()->user()->hasPermission('manage.products')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 

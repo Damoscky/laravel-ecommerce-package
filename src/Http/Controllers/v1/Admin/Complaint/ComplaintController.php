@@ -26,7 +26,7 @@ class ComplaintController extends BaseController
      */
     public function listAllComplaints(Request $request)
     {
-        if (!auth()->user()->hasPermission('view.complaints')) {
+        if (!auth()->user()->hasPermission('view.ecommercomplaints')) {
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -96,7 +96,7 @@ class ComplaintController extends BaseController
 
     public function show($id)
     {
-        if(!auth()->user()->hasPermission('view.complaints')){
+        if(!auth()->user()->hasPermission('view.ecommercomplaints')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         try {
@@ -115,7 +115,7 @@ class ComplaintController extends BaseController
 
     public function update(Request $request, $id)
     {
-        if(!auth()->user()->hasPermission('manage.complaints')){
+        if(!auth()->user()->hasPermission('manage.ecommercomplaints')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         try {
