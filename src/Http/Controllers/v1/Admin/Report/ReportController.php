@@ -61,6 +61,8 @@ class ReportController extends BaseController
 
             $products = EcommerceProduct::with('ecommerceVendor')->when($nameSearchParam, function ($query) use ($nameSearchParam) {
                 return $query->where('product_name', 'LIKE', '%' . $nameSearchParam . '%');
+            })->when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
+                return $query->where('created_at', '>=', $carbonDateFilter);
             })->when($dateSearchParams, function ($query, $dateSearchParams) use ($request) {
                 $startDate = Carbon::parse($request->start_date);
                 $endDate = Carbon::parse($request->end_date);
@@ -74,6 +76,8 @@ class ReportController extends BaseController
                     $startDate = Carbon::parse($request->start_date);
                     $endDate = Carbon::parse($request->end_date);
                     return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
+                })->when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
+                    return $query->where('created_at', '>=', $carbonDateFilter);
                 })->when($statusSearchParam, function ($query) use ($statusSearchParam) {
                     return $query->where('status', $statusSearchParam);
                 })->selectRaw('SUM(unit_price * quantity_ordered) as total_sales')
@@ -84,6 +88,8 @@ class ReportController extends BaseController
                     $startDate = Carbon::parse($request->start_date);
                     $endDate = Carbon::parse($request->end_date);
                     return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
+                })->when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
+                    return $query->where('created_at', '>=', $carbonDateFilter);
                 })->when($statusSearchParam, function ($query) use ($statusSearchParam) {
                     return $query->where('status', $statusSearchParam);
                 })->count();
@@ -93,6 +99,8 @@ class ReportController extends BaseController
                     $startDate = Carbon::parse($request->start_date);
                     $endDate = Carbon::parse($request->end_date);
                     return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
+                })->when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
+                    return $query->where('created_at', '>=', $carbonDateFilter);
                 })->when($statusSearchParam, function ($query) use ($statusSearchParam) {
                     return $query->where('status', $statusSearchParam);
                 })->count();
@@ -177,6 +185,10 @@ class ReportController extends BaseController
                 return $query->where('created_at', '>=', $carbonDateFilter);
             })->when($statusSearchParam, function ($query) use ($statusSearchParam) {
                 return $query->where('status',  $statusSearchParam);
+            })->when($dateSearchParams, function ($query, $dateSearchParams) use ($request) {
+                $startDate = Carbon::parse($request->start_date);
+                $endDate = Carbon::parse($request->end_date);
+                return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
             })->selectRaw('SUM(total_price + shipping_fee) as total_sales')
             ->value('total_sales');
 
@@ -184,12 +196,20 @@ class ReportController extends BaseController
                 return $query->where('created_at', '>=', $carbonDateFilter);
             })->when($statusSearchParam, function ($query) use ($statusSearchParam) {
                 return $query->where('status',  $statusSearchParam);
+            })->when($dateSearchParams, function ($query, $dateSearchParams) use ($request) {
+                $startDate = Carbon::parse($request->start_date);
+                $endDate = Carbon::parse($request->end_date);
+                return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
             })->count();
 
             $totalItemSold = EcommerceOrderDetails::when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
                 return $query->where('created_at', '>=', $carbonDateFilter);
             })->when($statusSearchParam, function ($query) use ($statusSearchParam) {
                 return $query->where('status',  $statusSearchParam);
+            })->when($dateSearchParams, function ($query, $dateSearchParams) use ($request) {
+                $startDate = Carbon::parse($request->start_date);
+                $endDate = Carbon::parse($request->end_date);
+                return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
             })->sum('quantity_ordered');
 
             $orders = EcommerceOrder::when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
@@ -327,11 +347,13 @@ class ReportController extends BaseController
                     }else{
                         return $query->orderBy('created_at', 'desc');
                     }
+                })->when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
+                    return $query->where('created_at', '>=', $carbonDateFilter);
                 })->when($customerNameSearchParam, function ($query, $customerNameSearchParam) use ($request) {
                     return $query->where('firstname', 'LIKE', '%' . $customerNameSearchParam . '%');
                 })->when($statusSearchParam, function ($query, $statusSearchParam) use ($request) {
                     return $query->where('is_active', $statusSearchParam);
-                })->where('is_active', true);
+                });
     
             if(isset($request->export)){
                 $customers = $customers->get();
@@ -342,7 +364,7 @@ class ReportController extends BaseController
             }
 
             $months = range(1, 12);
-            $customerChat = [];
+            $customerChart = [];
             foreach ($months as $month) {
 
                 $customerStat = User::whereRelation('roles', 'slug', $customerRole)
@@ -350,14 +372,14 @@ class ReportController extends BaseController
                     ->whereMonth('created_at', $month)
                     ->count();
 
-                $customerChat[date('F', mktime(0, 0, 0, $month, 10))] = ["customerStat" => $customerStat];
+                $customerChart[date('F', mktime(0, 0, 0, $month, 10))] = ["customerStat" => $customerStat];
             }
 
             $data = [
                 'totalCustomer' => $totalCustomer,
                 'totalVisitor' => $totalVisitor,
                 'customers' => $customers,
-                'customerChat' => $customerChat
+                'customerChart' => $customerChart
             ];
 
             return JsonResponser::send(false, 'Record(s) found successfully', $data, 200);

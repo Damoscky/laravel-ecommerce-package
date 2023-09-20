@@ -232,13 +232,13 @@ class EcommercePermissionsTableSeeder extends Seeder
 
             [
                 'name'        => 'Can View Ecommerce Complaints',
-                'slug'        => 'view.ecommercomplaints',
+                'slug'        => 'view.ecommercecomplaints',
                 'description' => 'Ecommerce Complaints Management',
                 'model'       => 'Permission',
             ],
             [
                 'name'        => 'Can Export Ecommerce Complaints',
-                'slug'        => 'manage.ecommercomplaints',
+                'slug'        => 'manage.ecommercecomplaints',
                 'description' => 'Manage Ecommerce Complaints Management',
                 'model'       => 'Permission',
             ],

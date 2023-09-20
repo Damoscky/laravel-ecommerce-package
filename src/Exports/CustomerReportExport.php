@@ -34,12 +34,14 @@ class CustomerReportExport implements FromCollection, WithHeadings, WithMapping
             $customers->id,
             $customers->firstname. ' '.$customers->lastname,
             $customers->phoneno,
+            isset($customers->is_active) ? "Active" : "Inactive",
+            isset($customers->userbilling) ? $customers->userbilling->city : "",
             Carbon::parse($customers->created_at),
         ];
     }
 
     public function headings(): array
     {
-        return array('ID', 'Name', 'Phone', 'Date Created');
+        return array('ID', 'Name', 'Phone', 'Status', 'City', 'Date Created');
     }
 }

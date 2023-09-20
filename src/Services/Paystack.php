@@ -232,12 +232,54 @@ class Paystack
         return $this->getResponse()['data'];
     }
 
+    public static function verifyTransaction($reference)
+    {
+        // generate access token
+        $baseUrl = env('PAYSTACK_PAYMENT_URL');
+        $url = $baseUrl.'/transaction/verify/'.$reference;
+
+        $headerParams = [
+            'Authorization: Bearer '. env('PAYSTACK_SECRET_KEY'),
+        ];
+
+        // Make post request
+        return $result = CurlService::getRequest($url, $headerParams);
+    }
+
+    public static function chargeAuthorization($request)
+    {
+        // generate access token
+        $baseUrl = env('PAYSTACK_PAYMENT_URL');
+        $url = $baseUrl.'/transaction/charge_authorization';
+
+        $headerParams = [
+            'Authorization: Bearer '. env('PAYSTACK_SECRET_KEY'),
+        ];
+
+        // Make post request
+        return $result = CurlService::postRequest($url, $request, $headerParams);
+    }
+
 
     public static function createPlan($request)
     {
         // generate access token
         $baseUrl = env('PAYSTACK_PAYMENT_URL');
         $url = $baseUrl.'/plan';
+
+        $headerParams = [
+            'Authorization: Bearer '. env('PAYSTACK_SECRET_KEY'),
+        ];
+
+        // Make post request
+        return $result = CurlService::postRequest($url, $request, $headerParams);
+    }
+
+    public static function createProduct($request)
+    {
+        // generate access token
+        $baseUrl = env('PAYSTACK_PAYMENT_URL');
+        $url = $baseUrl.'/product';
 
         $headerParams = [
             'Authorization: Bearer '. env('PAYSTACK_SECRET_KEY'),

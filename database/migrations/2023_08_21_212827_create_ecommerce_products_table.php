@@ -32,6 +32,7 @@ return new class extends Migration
             $table->mediumText('product_image3')->nullable();
             $table->mediumText('product_image4')->nullable();
             $table->mediumText('featured_image')->nullable();
+            $table->string('product_code')->nullable();
             $table->boolean('in_stock')->default(true);
             $table->decimal('regular_price', 15, 2)->default(0.00);
             $table->decimal('sales_price', 15, 2)->default(0.00);

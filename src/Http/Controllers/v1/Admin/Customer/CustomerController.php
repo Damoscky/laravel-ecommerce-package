@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Storage;
 use SbscPackage\Ecommerce\Helpers\UserMgtHelper;
 use SbscPackage\Ecommerce\Helpers\FileUploadHelper;
 use App\Models\User;
+use SbscPackage\Ecommerce\Models\EcommerceOrder;
+use SbscPackage\Ecommerce\Models\EcommerceOrderDetails;
 
 class CustomerController extends BaseController
 {
@@ -37,7 +39,7 @@ class CustomerController extends BaseController
                 return $roleTable->where('slug', $roleName);
             })->when($sortByRequestParam, function ($query) use ($request) {
                 if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
-                    return $query->orderBy('product_name', 'asc');
+                    return $query->orderBy('firstname', 'asc');
                 }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
                     return $query->orderBy('created_at', 'asc');
                 }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
@@ -97,6 +99,11 @@ class CustomerController extends BaseController
             })->when($statusSearchParam, function ($query, $statusSearchParam) use ($request) {
                 return $query->where('status', $statusSearchParam);
             })->where('is_active', true);
+
+            foreach ($customers as $record) {
+                $totalOrders = EcommerceOrderDetails::where('user_id', $record->id)->count();
+                $customers->totalOrders = $totalOrders;
+            }
 
             if(isset($request->export)){
                 $customers = $customers->get();
@@ -166,6 +173,10 @@ class CustomerController extends BaseController
         }
         
         $user = User::with('usershipping', 'userbilling')->where('id', $id)->first();
+        $totalOrders = EcommerceOrderDetails::where('user_id', $user->id)->count();
+        $totalSpending = EcommerceOrder::where('user_id', $user->id)->sum('total_price');
+        $user->totalOrders = $totalOrders;
+        $user->totalSpending = $totalSpending;
 
         if(is_null($user)){
             return JsonResponser::send(true, 'Record not found', [], 400);
@@ -191,7 +202,13 @@ class CustomerController extends BaseController
             'is_active' => $request->status
         ]);
 
-        return JsonResponser::send(false, 'Record updated successfully', $user, 200);
+        if($request->status == 0){
+            return JsonResponser::send(false, 'Customer Deactivated successfully', $user, 200);
+        }else{
+            return JsonResponser::send(false, 'Customer Activated successfully', $user, 200);
+        }
+
+        
 
     }
 

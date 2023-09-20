@@ -19,6 +19,7 @@ use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\ProfileController AS Cust
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\CartController AS CustomerCartController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\WishlistController AS CustomerWishlistController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\OrderController AS CustomerOrderController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\SubscriptionController AS CustomerSubscriptionController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Guest\ProductController AS GuestProductController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Guest\SubscriptionController AS GuestSubscriptionController;
 
@@ -103,6 +104,14 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::post('/validate-stock', [CustomerOrderController::class, 'checkStock']);
             Route::post('/create/complaint', [CustomerOrderController::class, 'createComplain']);
             Route::post('/complaints', [CustomerOrderController::class, 'complaints']);
+            Route::post('/subscription', [CustomerSubscriptionController::class, 'store']);
+        });
+
+        /*** Subscription Route ***/
+        Route::group(['prefix' => 'subscription'], function () {
+            Route::post('/all', [CustomerSubscriptionController::class, 'index']);
+            Route::get('initiate', [CustomerOrderController::class, 'chargeCustomer']);
+            Route::get('/view/{id}', [CustomerSubscriptionController::class, 'show']);
         });
 
     });
@@ -141,7 +150,7 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::post('/store', [AdminSubCategoryController::class, 'store']);
             Route::put('/update/{id}', [AdminSubCategoryController::class, 'update']);
             Route::put('/delete/{id}', [AdminSubCategoryController::class, 'update']);
-            Route::post('/pending', [AdminSubCategoryController::class, 'pendingSubCategory']);
+            Route::post('/pending/delete', [AdminSubCategoryController::class, 'pendingDeleteSubcategory']);
             Route::put('/pending/delete/{id}', [AdminSubCategoryController::class, 'deleteSubCategory']);
             Route::delete('/approve/delete/{id}', [AdminSubCategoryController::class, 'approveDeletedSubcategory']);
             Route::post('/pending', [AdminSubCategoryController::class, 'pendingSubcategory']);
@@ -209,6 +218,8 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::post('/', [AdminOrderController::class, 'index']);
             Route::get('/{id}', [AdminOrderController::class, 'show']);
             Route::put('/update/{id}', [AdminOrderController::class, 'update']);
+            Route::post('/recurring', [AdminOrderController::class, 'recurringOrders']);
+            Route::get('/recurring/{id}', [AdminOrderController::class, 'viewSingleRecurringOrder']);
         });
 
         Route::group(['prefix' => 'reports'], function () {

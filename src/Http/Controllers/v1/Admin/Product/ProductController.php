@@ -12,6 +12,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use SbscPackage\Ecommerce\Exports\ProductReportExport;
 use SbscPackage\Ecommerce\Models\Category;
 use Illuminate\Support\Facades\Validator;
+use SbscPackage\Ecommerce\Services\Paystack;
 use Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -447,6 +448,21 @@ class ProductController extends BaseController
             $vendorData = EcommerceVendor::where('business_name', "Fan")->first();
             isset($vendorData) ? $vendorId = $vendorData->id : $vendorId = 1;
 
+            $paystackData = [
+                'name' => $request->product_name,
+                'description' => $request->short_description,
+                'price' => $request->sales_price * 100,
+                'currency' => 'NGN',
+                'unlimited' => false,
+                'quantity' => $request->quantity_supplied,
+                'minimum_orderable' => $request->minimum_purchase_per_quantity
+            ];
+
+            $result = Paystack::createProduct($paystackData);
+            if ($result["status"] !== true) {
+                return JsonResponser::send(true, $result['message'], [], 400);
+            }
+
             $product = EcommerceProduct::create([
                 'category_id'  => $request->category_id,
                 'sub_category_id'  => $request->sub_category_id,
@@ -454,13 +470,14 @@ class ProductController extends BaseController
                 'product_name' => $request->product_name,
                 'long_description' => $request->long_description,
                 'short_description' => $request->short_description,
+                'product_code' => $result["data"]["product_code"],
                 'tags' => $request->tags,
                 'brand_name' => $request->brand_name,
                 'manage_stock_quantity' => $request->manage_stock_quantity,
                 'sku' => $request->sku,
                 'minimum_purchase_per_quantity' => $request->minimum_purchase_per_quantity,
                 'quantity_supplied' => $request->quantity_supplied,
-                'quantity_purchased' => $request->quantity_supplied,
+                'quantity_purchased' => 0,
                 'available_quantity' => $request->quantity_supplied,
                 'regular_price' => $request->regular_price,
                 'sales_price' => $request->sales_price,

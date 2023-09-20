@@ -113,15 +113,23 @@ class DashboardController extends BaseController
 
         $activeSubscription = 0;
 
-        $topProducts = EcommerceOrderDetails::with('ecommerceproduct')->whereHas('ecommerceproduct', function ($query) {
+        $topProducts = EcommerceOrderDetails::select('ecommerce_product_id')
+        ->with('ecommerceproduct')
+        ->whereHas('ecommerceproduct', function ($query) {
             $query->where('status', ProductStatusInterface::ACTIVE);
-        })->when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
+        })
+        ->when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
             return $query->where('created_at', '>=', $carbonDateFilter);
-        })->when($dateSearchParams, function($query, $dateSearchParams) use($request) {
+        })
+        ->when($dateSearchParams, function ($query, $dateSearchParams) use ($request) {
             $startDate = Carbon::parse($request->start_date);
             $endDate = Carbon::parse($request->end_date);
             return $query->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
-        })->orderBy('quantity_ordered', 'DESC')->take(5)->get();
+        })
+        ->groupBy('ecommerce_product_id') // Group by ecommerceproduct_id
+        ->orderByRaw('SUM(quantity_ordered) DESC') // Order by sum of quantity_ordered
+        ->take(5)
+        ->get();
 
         $deliveredSales =  EcommerceOrder::when($carbonDateFilter, function ($query) use ($carbonDateFilter) {
             return $query->where('created_at', '>=', $carbonDateFilter);

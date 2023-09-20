@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class EcommerceProduct extends Model
 {
     use HasFactory;
-     use SoftDeletes;
+    use SoftDeletes;
 
     protected $guarded = ['id'];
     protected $with = ['category', 'subcategory', 'ecommerceVendor'];
@@ -27,6 +27,11 @@ class EcommerceProduct extends Model
     public function ecommerceorderdetails()
     {
         return $this->hasMany(EcommerceOrderDetails::class);
+    }
+
+    public function ecommerceproductsubscription()
+    {
+        return $this->hasMany(EcommerceProductSubscription::class);
     }
 
     public function ecommerceVendor()

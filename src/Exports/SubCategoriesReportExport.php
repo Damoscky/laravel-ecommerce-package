@@ -41,6 +41,6 @@ class SubCategoriesReportExport implements FromCollection, WithHeadings, WithMap
 
     public function headings(): array
     {
-        return array('ID', 'Name', 'Category Name', 'Logo', 'Status', 'Created At');
+        return array('ID', 'Name', 'Category Name', 'Logo', 'Status', 'Date Created');
     }
 }

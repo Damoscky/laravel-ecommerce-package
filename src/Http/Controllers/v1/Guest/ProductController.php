@@ -73,7 +73,7 @@ class ProductController extends BaseController
     public function getProductsByCategories()
     {
         $records = Category::with(['ecommerceproduct' => function ($query) {
-            $query->where('is_active', true)->take(4);
+            $query->where('is_active', true);
         }])->where('is_active', true)->paginate(10);
          // Check if the user is signed in and has the product in their wishlist
          $user = auth()->user();

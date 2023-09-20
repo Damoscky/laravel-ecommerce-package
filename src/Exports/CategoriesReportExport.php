@@ -40,6 +40,6 @@ class CategoriesReportExport implements FromCollection, WithHeadings, WithMappin
 
     public function headings(): array
     {
-        return array('ID', 'Category Name', 'Logo', 'Status', 'Created At');
+        return array('ID', 'Category Name', 'Logo', 'Status', 'Date Created');
     }
 }

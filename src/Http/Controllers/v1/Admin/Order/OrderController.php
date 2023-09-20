@@ -7,16 +7,20 @@ use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use DB, Validator;
+
 use SbscPackage\Ecommerce\Helpers\ProcessAuditLog;
 use SbscPackage\Ecommerce\Responser\JsonResponser;
 use SbscPackage\Ecommerce\Exports\OrderExportReport;
+use SbscPackage\Ecommerce\Exports\RecurringOrderExportReport;
 use Maatwebsite\Excel\Facades\Excel;
 use SbscPackage\Ecommerce\Interfaces\ProductStatusInterface;
 use SbscPackage\Ecommerce\Models\EcommerceOrderDetails;
 use SbscPackage\Ecommerce\Models\EcommerceProduct;
 use App\Models\User;
+use SbscPackage\Ecommerce\Interfaces\GeneralStatusInterface;
 use SbscPackage\Ecommerce\Interfaces\OrderStatusInterface;
 use SbscPackage\Ecommerce\Models\EcommerceOrder;
+use SbscPackage\Ecommerce\Models\EcommerceProductSubscription;
 
 class OrderController extends BaseController
 {
@@ -189,6 +193,71 @@ class OrderController extends BaseController
         ];
         $validateOrder = Validator::make($request->all(), $rules);
         return $validateOrder;
+    }
+
+    public function recurringOrders(Request $request)
+    {
+        $interval = $request->interval;
+        $sortByRequestParam = $request->sort_by;
+        $nameSearchParam = $request->search_param;
+        $statusSearchParam = $request->status;
+
+
+        $totalSubscription = EcommerceProductSubscription::count();
+        $activeSubscription = EcommerceProductSubscription::where('status', GeneralStatusInterface::ACTIVE)->count();
+        $inactiveSubscription = EcommerceProductSubscription::where('status', GeneralStatusInterface::INACTIVE)->count();
+        $expiredSubscription = EcommerceProductSubscription::where('status', GeneralStatusInterface::EXPIRED)->count();
+
+        $records = EcommerceProductSubscription::with('user', 'ecommerceorderdetails', 'ecommerceproduct')
+        ->when($statusSearchParam, function ($query) use ($statusSearchParam) {
+            return $query->where('status', $statusSearchParam);
+        })->when($nameSearchParam, function ($query, $nameSearchParam) {
+            return $query->whereHas('user', function ($query) use ($nameSearchParam) {
+                return $query->where('firstname', 'LIKE', '%' . $nameSearchParam . '%')
+                ->orWhere('lastname', 'LIKE', '%' . $nameSearchParam . '%');
+            });
+        })->when($interval, function ($query) use ($interval) {
+            return $query->where('interval', $interval);
+        })->when($sortByRequestParam, function ($query) use ($request) {
+            if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                return $query->whereHas('user', function ($query) use ($request) {
+                    return $query->orderBy('firstname', 'desc');
+                });
+            }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                return $query->orderBy('created_at', 'asc');
+            }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                return $query->orderBy('created_at', 'desc');
+            }else{
+                return $query->orderBy('created_at', 'desc');
+            }
+        });
+
+        if(isset($request->export)){
+            $records = $records->get();
+            return Excel::download(new RecurringOrderExportReport($records), 'recurringorderreportdata.xlsx');
+        }else{
+            $records = $records->paginate(12);
+        }
+
+        $data = [
+            'totalSubscription' => $totalSubscription,
+            'activeSubscription' => $activeSubscription,
+            'inactiveSubscription' => $inactiveSubscription,
+            'expiredSubscription' => $expiredSubscription,
+            'allSubscriptions' => $records
+        ];
+
+        return JsonResponser::send(false, "Record found successfully", $data, 200);
+
+    }
+
+    public function viewSingleRecurringOrder($id)
+    {
+        $record = EcommerceProductSubscription::with('user.userbilling', 'user.usershipping', 'ecommerceproduct', 'ecommerceorderdetails.ecommerceorder')->where('id', $id)->first();
+        if(is_null($record)){
+            return JsonResponser::send(true, "No record found", [], 400);
+        }
+        return JsonResponser::send(false, "Record found successfully", $record, 200);
     }
 
 }
