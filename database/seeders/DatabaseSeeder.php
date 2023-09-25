@@ -6,6 +6,7 @@ namespace SbscPackage\Ecommerce\Database\Seeders;
 use Illuminate\Database\Seeder;
 use SbscPackage\Ecommerce\Database\Seeders\EcommerceRoleSeeder;
 use SbscPackage\Ecommerce\Database\Seeders\EcommercePermissionsTableSeeder;
+use SbscPackage\Ecommerce\Database\Seeders\EcommerceCategorySeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             EcommercePermissionsTableSeeder::class,
             EcommerceRoleSeeder::class,
+            EcommerceCategorySeeder::class,
         ]);
     }
 }
