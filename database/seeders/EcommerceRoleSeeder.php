@@ -97,6 +97,7 @@ class EcommerceRoleSeeder extends Seeder
                 'can_login' => true,
                 'email_verified_at' => now(),
                 'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+                //$2y$10$rooBCg1ruW5EUNSsrm6bkOtFzQ0cU6G2sCSCBOlOKRUJMkSyvZUI6
                 'remember_token' => Str::random(10),
             ]);
 
