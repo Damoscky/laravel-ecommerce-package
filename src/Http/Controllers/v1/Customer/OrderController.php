@@ -456,6 +456,18 @@ class OrderController extends BaseController
 						'city' => $currentUserInstance->usershipping->city,
 						'postal_code' => $currentUserInstance->usershipping->postal_code,
 					]);
+				}else{
+					EcommerceShippingAddress::create([
+						'fullname' => $currentUserInstance->userbilling->firstname . ' ' . $currentUserInstance->userbilling->lastname,
+						'email' => $currentUserInstance->email,
+						'ecommerce_order_id' => $order->id,
+						'phoneno' => $currentUserInstance->userbilling->phoneno,
+						'address' => $currentUserInstance->userbilling->address,
+						'country' => $currentUserInstance->userbilling->country,
+						'state' => $currentUserInstance->userbilling->state,
+						'city' => $currentUserInstance->userbilling->city,
+						'postal_code' => $currentUserInstance->userbilling->postal_code,
+					]);
 				}
 
                 $result = Paystack::chargeAuthorization($request);

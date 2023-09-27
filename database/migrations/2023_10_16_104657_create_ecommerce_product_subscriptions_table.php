@@ -27,7 +27,7 @@ class CreateEcommerceProductSubscriptionsTable extends Migration
             $table->string('quantity')->nullable();
             $table->string('status')->default("Active");
             $table->foreign('ecommerce_product_id')->references('id')->on('ecommerce_products')->onDelete('cascade');
-            $table->foreign('ecommerce_order_details_id')->references('id')->on('ecommerce_order_details')->onDelete('cascade');
+            // $table->foreign('ecommerce_order_details_id')->references('id')->on('ecommerce_order_details')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
             

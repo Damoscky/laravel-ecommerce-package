@@ -13,6 +13,7 @@ use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Complaint\ComplaintControlle
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Plan\PlanController AS AdminPlanController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Order\OrderController AS AdminOrderController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Report\ReportController AS AdminReportController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Banner\BannerController AS AdminBannerController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Vendor\RegisterController AS VendorRegisterController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\RegisterController AS CustomerRegisterController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\ProfileController AS CustomerProfileController;
@@ -68,7 +69,11 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::get('/by-subcategories', [GuestProductController::class, 'getProductsBySubCategories']);
             Route::get('/{id}', [GuestProductController::class, 'show']);
 
+
         });
+
+        //charge customer
+        Route::get('customer/subscription/initiate', [CustomerOrderController::class, 'chargeCustomer']);
     });
 
 
@@ -110,7 +115,6 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
         /*** Subscription Route ***/
         Route::group(['prefix' => 'subscription'], function () {
             Route::post('/all', [CustomerSubscriptionController::class, 'index']);
-            Route::get('initiate', [CustomerOrderController::class, 'chargeCustomer']);
             Route::get('/view/{id}', [CustomerSubscriptionController::class, 'show']);
         });
 
@@ -125,6 +129,12 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
     Route::group(['prefix' => 'admin', "namespace" => "v1\Admin", 'middleware' => ["auth:api", "ecommercesuperadmin"]], function () {
         Route::post('/dashboard', [AdminDashboardController::class, 'dashboard']);
 
+
+        /** Banner Route ***/
+        Route::group(["prefix" => "banner", "namespace" => "v1\Admin"], function () {
+            Route::post('/create', [AdminBannerController::class, 'store']);
+            Route::get('/', [AdminBannerController::class, 'index']);
+        });
 
          /** Admin Category Route ***/
          Route::group(["prefix" => "category", "namespace" => "v1\Admin"], function () {

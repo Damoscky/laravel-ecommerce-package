@@ -79,6 +79,7 @@ class EcommerceRoleSeeder extends Seeder
             ->orWhere('description', '=', 'Ecommerce AuditLog Management')
             ->orWhere('description', '=', 'Ecommerce Complaints Management')
             ->orWhere('description', '=', 'Ecommerce Report Management')
+            ->orWhere('description', '=', 'Ecommerce Banner Management')
             ->get();
 
         $vendorPermission = config('roles.models.permission')::where('description', '=', 'Ecommerce Product Management')

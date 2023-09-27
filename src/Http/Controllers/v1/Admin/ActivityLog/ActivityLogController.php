@@ -15,7 +15,7 @@ class ActivityLogController extends BaseController
 {
     public function index(Request $request)
     {
-        if(!auth()->user()->hasPermission('view.auditlogs')){
+        if(!auth()->user()->hasPermission('view.ecommerceauditlogs')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $nameSearchParam = $request->username;

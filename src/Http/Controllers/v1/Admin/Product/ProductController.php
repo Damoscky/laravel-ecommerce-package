@@ -29,7 +29,7 @@ class ProductController extends BaseController
      */
     public function listAllProducts(Request $request)
     {
-        if(!auth()->user()->hasPermission('view.products')){
+        if(!auth()->user()->hasPermission('view.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -87,7 +87,7 @@ class ProductController extends BaseController
      */
     public function listAllActivatedProducts(Request $request)
     {
-        if(!auth()->user()->hasPermission('view.products')){
+        if(!auth()->user()->hasPermission('view.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -146,7 +146,7 @@ class ProductController extends BaseController
      */
     public function listAllDeactivatedProducts(Request $request)
     {
-        if(!auth()->user()->hasPermission('view.products')){
+        if(!auth()->user()->hasPermission('view.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -204,7 +204,7 @@ class ProductController extends BaseController
      */
     public function listAllRequestProducts(Request $request)
     {
-        if(!auth()->user()->hasPermission('manage.products')){
+        if(!auth()->user()->hasPermission('manage.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -262,7 +262,7 @@ class ProductController extends BaseController
      */
     public function listAllDeleteRequestProducts(Request $request)
     {
-        if(!auth()->user()->hasPermission('manage.products')){
+        if(!auth()->user()->hasPermission('manage.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -319,7 +319,7 @@ class ProductController extends BaseController
      */
     public function listAllPendingRequestProducts(Request $request)
     {
-        if(!auth()->user()->hasPermission('manage.products')){
+        if(!auth()->user()->hasPermission('manage.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -377,7 +377,7 @@ class ProductController extends BaseController
      */
     public function listAllApprovedProducts()
     {
-        if(!auth()->user()->hasPermission('view.products')){
+        if(!auth()->user()->hasPermission('view.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -403,7 +403,7 @@ class ProductController extends BaseController
      */
     public function store(CreateProductRequest $request)
     {
-        if(!auth()->user()->hasPermission('create.products')){
+        if(!auth()->user()->hasPermission('create.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
@@ -562,7 +562,7 @@ class ProductController extends BaseController
      */
     public function show($id)
     {
-        if(!auth()->user()->hasPermission('view.products')){
+        if(!auth()->user()->hasPermission('view.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         try {
@@ -589,7 +589,7 @@ class ProductController extends BaseController
      */
     public function update(Request $request, $id)
     {
-        if(!auth()->user()->hasPermission('edit.products')){
+        if(!auth()->user()->hasPermission('edit.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $product = EcommerceProduct::find($id);
@@ -734,7 +734,7 @@ class ProductController extends BaseController
 
     public function deleteForApproval($id)
     {
-        if(!auth()->user()->hasPermission('edit.products')){
+        if(!auth()->user()->hasPermission('edit.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         try {
@@ -775,7 +775,7 @@ class ProductController extends BaseController
 
     public function approvePendingProduct($id)
     {
-        if(!auth()->user()->hasPermission('manage.products')){
+        if(!auth()->user()->hasPermission('manage.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $record = EcommerceProduct::find($id);
@@ -812,7 +812,7 @@ class ProductController extends BaseController
 
     public function declinePendingProduct($id)
     {
-        if(!auth()->user()->hasPermission('manage.products')){
+        if(!auth()->user()->hasPermission('manage.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $record = EcommerceProduct::find($id);
@@ -849,7 +849,7 @@ class ProductController extends BaseController
 
     public function declineDeletedProduct($id)
     {
-        if(!auth()->user()->hasPermission('manage.products')){
+        if(!auth()->user()->hasPermission('manage.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $record = EcommerceProduct::find($id);
@@ -886,7 +886,7 @@ class ProductController extends BaseController
 
     public function approveDeletedProduct($id)
     {
-        if(!auth()->user()->hasPermission('delete.products')){
+        if(!auth()->user()->hasPermission('delete.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $record = EcommerceProduct::find($id);
@@ -933,7 +933,7 @@ class ProductController extends BaseController
      */
     public function destroy($id)
     {
-        if(!auth()->user()->hasPermission('delete.products')){
+        if(!auth()->user()->hasPermission('delete.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         try {
@@ -976,7 +976,7 @@ class ProductController extends BaseController
 
     public function activate($id)
     {
-        if(!auth()->user()->hasPermission('manage.products')){
+        if(!auth()->user()->hasPermission('manage.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         $product = EcommerceProduct::find($id);
@@ -1019,7 +1019,7 @@ class ProductController extends BaseController
      */
     public function deactivate($id)
     {
-        if(!auth()->user()->hasPermission('manage.products')){
+        if(!auth()->user()->hasPermission('manage.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
 
