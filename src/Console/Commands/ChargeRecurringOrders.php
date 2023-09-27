@@ -1,6 +1,6 @@
 <?php
 
-namespace SbscPackage\Ecommerce\App\Console\Commands;
+namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\User;
@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Notification;
 use Carbon\Carbon;
 use SbscPackage\Ecommerce\Models\EcommerceBillingDetails;
 use SbscPackage\Ecommerce\Models\EcommerceOrder;
+use SbscPackage\Ecommerce\Models\EcommerceCard;
 use SbscPackage\Ecommerce\Models\EcommerceOrderDetails;
 use SbscPackage\Ecommerce\Models\EcommerceProductSubscription;
 use SbscPackage\Ecommerce\Models\EcommerceShippingAddress;
@@ -138,6 +139,39 @@ class ChargeRecurringOrders extends Command
 	}
 
     /**
+	 * Store users card
+	 */
+	protected function card($data, $currentUserInstance)
+	{
+		$cardData = [
+			"email" =>  $data["data"]["customer"]["email"],
+			"user_id" => $currentUserInstance->id
+		];
+		$cardData = array_merge($cardData, $data["data"]["authorization"]);
+
+		return EcommerceCard::firstOrCreate(
+			[
+				"email" => $cardData["email"],
+				"signature" => $cardData["signature"]
+			],
+			[
+				"user_id" => $cardData["user_id"],
+				"authorization_code" => $cardData["authorization_code"],
+				"bin" => $cardData["bin"],
+				"last4" => $cardData["last4"],
+				"exp_month" => $cardData["exp_month"],
+				"exp_year" => $cardData["exp_year"],
+				"channel" => $cardData["channel"],
+				"card_type" => $cardData["card_type"],
+				"bank" => $cardData["bank"],
+				"country_code" => $cardData["country_code"],
+				"brand" => $cardData["brand"],
+				"reusable" => $cardData["reusable"],
+			]
+		);
+	}
+
+    /**
 	 * Generate unique order id
 	 */
 	protected function generateUniqueId()
@@ -164,7 +198,9 @@ class ChargeRecurringOrders extends Command
 			->where('next_sub_date', Carbon::today())->where('end_date', '>=', Carbon::today())->get();
 
             if(count($pendingSubscription) == 0){
-                return JsonResponser::send(true, "No record Available", [], 400);
+                dump("No record found");
+                exit();
+                // return JsonResponser::send(true, "No record Available", [], 400);
             }
 			DB::beginTransaction();
 
@@ -276,9 +312,11 @@ class ChargeRecurringOrders extends Command
                 	// reverse the product and set order has cancelled
 					$this->handleFailedTransactions($order->id, $result["data"]);
 					DB::commit();
-					return JsonResponser::send(true, "Transaction not successful", [], 400);
+                    dump("Transaction not successful");
+                    exit();
+					// return JsonResponser::send(true, "Transaction not successful", [], 400);
 				}
-				$card = $this->card($result);
+				$card = $this->card($result, $currentUserInstance);
 
 				$trx = [
 					"card_id" => $card->id,
@@ -311,12 +349,14 @@ class ChargeRecurringOrders extends Command
 			
             }
 			$newOrder = EcommerceOrder::with('ecommerceorderdetails')->where('id', $order->id)->first();
-
-			return JsonResponser::send(false, "Recurring Ordered Successfully! Order details has been sent to your email", $newOrder, 200);
+            dump("Recurring order processed Successfully! Order details has been sent to your email");
+            exit();
+			// return JsonResponser::send(false, "Recurring Ordered Successfully! Order details has been sent to your email", $newOrder, 200);
 
 
         } catch (\Throwable $error) {
-            return JsonResponser::send(true, $error->getMessage(), [], 500);
+            dump($error->getMessage());
+            // return JsonResponser::send(true, $error->getMessage(), [], 500);
         }
     }
 }
