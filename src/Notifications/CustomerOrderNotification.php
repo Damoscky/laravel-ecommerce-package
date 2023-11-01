@@ -40,8 +40,11 @@ class CustomerOrderNotification extends Notification
         return (new MailMessage)
                     ->greeting('Hello '.$data['name'].'!')
                     ->subject("Order Placed - ". env('APP_NAME'))
-                    ->line('This is to notify you that your order on '. env('APP_NAME').' was successful.')
-                    ->line('Order details here....');
+                    ->line("Confirmation Order Number: ".$data['orders']['orderID'])
+                    ->line("We’re happy to let you know that we’ve received your order.")
+                    ->line("Once your package has been shipped, we will send you an email with a tracking number and link so you can see the movement of your package.")
+                    ->line("If you have any questions, contact us via email ".env('MAIL_FROM_ADDRESS'))
+                    ->line('We are here to help!');
     }
 
     /**
