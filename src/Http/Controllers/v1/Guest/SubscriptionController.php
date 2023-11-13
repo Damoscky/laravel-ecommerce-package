@@ -20,7 +20,7 @@ class SubscriptionController extends BaseController
         $validate = $this->validateSubscriber($request);
 
         if ($validate->fails()) {
-            return JsonResponser::send(true, 'Validation Failed', $validate->errors()->all());
+            return JsonResponser::send(true, $validate->errors()->first(), $validate->errors()->all());
         }
 
         try {
@@ -47,7 +47,7 @@ class SubscriptionController extends BaseController
     public function validateSubscriber(Request $request)
     {
         $rules = [
-            'email' => 'required|unique:newsletter_subscribers|email:rfc,dns'
+            'email' => 'required|unique:ecommerce_newsletter_subscribers|email:rfc,dns'
         ];
 
         return Validator::make($request->all(), $rules);

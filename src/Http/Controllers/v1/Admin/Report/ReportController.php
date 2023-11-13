@@ -25,6 +25,8 @@ use App\Models\User;
 use SbscPackage\Ecommerce\Interfaces\OrderStatusInterface;
 use SbscPackage\Ecommerce\Models\EcommerceOrder;
 use Carbon\Carbon;
+use SbscPackage\Ecommerce\Exports\NewsLetterReportExport;
+use SbscPackage\Ecommerce\Models\EcommerceNewsletterSubscriber;
 
 class ReportController extends BaseController
 {
@@ -388,5 +390,15 @@ class ReportController extends BaseController
             logger($th);
             return JsonResponser::send(true, $th->getMessage(), [], 500);
         }
+    }
+
+    public function subscribersExport()
+    {
+        $subscription = EcommerceNewsletterSubscriber::where('is_active', true)->get();
+        if(count($subscription) == 0){
+            return JsonResponser::send(true, 'Record not found', [], 200);
+        }
+        return Excel::download(new NewsLetterReportExport($subscription), 'newslettersubscriptionreport.xlsx');
+
     }
 }

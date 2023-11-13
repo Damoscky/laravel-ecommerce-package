@@ -133,7 +133,7 @@ class ProductController extends BaseController
         if ($user) {
            foreach ($records as $record) {
                 foreach ($record->ecommerceproduct as $product) {
-                    $wishlist = $user->userecommercewishlist()->where('ecommerce_product_id', $record->id)->exists();
+                    $wishlist = $user->userecommercewishlist()->where('ecommerce_product_id', $product->id)->exists();
                     $product->wishlist = $wishlist;
                 }
            }

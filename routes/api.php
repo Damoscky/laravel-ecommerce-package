@@ -237,6 +237,7 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::post('/products', [AdminReportController::class, 'products']);
             Route::post('/orders', [AdminReportController::class, 'orders']);
             Route::post('/customers', [AdminReportController::class, 'customers']);
+            Route::get('/news-letter-subscribers/export', [AdminReportController::class, 'subscribersExport']);
         });
 
     });
