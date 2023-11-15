@@ -14,6 +14,8 @@ class EcommerceOrderDetails extends Model
 
     protected $guarded = ['id'];
 
+    protected $with = ['ecommerceproduct'];
+
     public function ecommerceorder()
     {
         return $this->belongsTo(EcommerceOrder::class, 'ecommerce_order_id');

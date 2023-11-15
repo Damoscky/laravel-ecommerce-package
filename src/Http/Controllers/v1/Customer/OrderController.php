@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Validator;
 use Hash, DB;
 use Carbon\Carbon;
 use SbscPackage\Ecommerce\Interfaces\GeneralStatusInterface;
+use SbscPackage\Ecommerce\Interfaces\OrderStatusInterface;
 use SbscPackage\Ecommerce\Models\EcommerceCard;
 use SbscPackage\Ecommerce\Models\EcommerceComplaint;
 use SbscPackage\Ecommerce\Models\EcommerceOrder;
@@ -724,6 +725,46 @@ class OrderController extends BaseController
 
 		return false;
 	}
+
+	public function cancelOrder(Request $request, $id)    
+    {
+        try {
+            $record = EcommerceOrderDetails::find($id);
+            if(is_null($record)){
+                return JsonResponser::send(true, "Record not found", null, 400);
+            }
+            $currentUserInstance = UserMgtHelper::userInstance();
+
+			DB::beginTransaction();
+            //check order status
+            if(($record->status == OrderStatusInterface::PENDING) || ($record->status == OrderStatusInterface::PROCESSING)){
+                $record->update([
+                    'status' => OrderStatusInterface::CANCELLED,
+					'cancel_description' => $request->cancel_description,
+					'cancel_reason' => $request->cancel_reason,
+                ]); 
+
+                $dataToLog = [
+                    'causer_id' => $currentUserInstance->id,
+                    'action_id' => $record->id,
+                    'action_type' => "Models\EcommerceOrderDetails",
+                    'log_name' => "Order cancelled Successfully",
+                    'action' => 'Update',
+                    'description' => "Order cancelled Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+                ];
+    
+                ProcessAuditLog::storeAuditLog($dataToLog);
+				DB::commit();
+                return JsonResponser::send(false, 'Order has been cancelled successfully', $record, 200);
+            }
+
+            return JsonResponser::send(true, 'Your Order could not be cancelled', $record, 400);
+        } catch (\Throwable $error) {
+            logger($error);
+            DB::rollback();
+            return JsonResponser::send(true, $error->getMessage(), null, 500);
+        }
+    }
 
 	public function validateOrder($request)
 	{

@@ -17,6 +17,7 @@ class CreateEcommerceOrderDetailsTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('ecommerce_order_id');
             $table->unsignedBigInteger('ecommerce_product_id');
+            $table->unsignedBigInteger('logistics_company_id');
             $table->unsignedBigInteger('user_id');
             $table->string('product_name')->nullable();
             $table->string('orderNO')->nullable();
@@ -32,6 +33,8 @@ class CreateEcommerceOrderDetailsTable extends Migration
             $table->string('brand_id')->nullable();
             $table->string('status')->default('pending')->nullable();
             $table->mediumText('image')->nullable();
+            $table->mediumText('cancel_reason')->nullable();
+            $table->mediumText('cancel_description')->nullable();
             $table->mediumText('description')->nullable();
             $table->integer('quantity_ordered')->nullable();
             $table->boolean('delivered')->default(false);

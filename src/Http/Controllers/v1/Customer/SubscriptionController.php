@@ -13,6 +13,7 @@ use SbscPackage\Ecommerce\Helpers\UserMgtHelper;
 use Illuminate\Routing\Controller as BaseController;
 use SbscPackage\Ecommerce\Services\Paystack;
 use Carbon\Carbon;
+use SbscPackage\Ecommerce\Interfaces\OrderStatusInterface;
 use SbscPackage\Ecommerce\Models\EcommerceCard;
 use SbscPackage\Ecommerce\Models\EcommerceOrderDetails;
 
@@ -173,6 +174,78 @@ class SubscriptionController extends BaseController
             return JsonResponser::send(true, "No record found", [], 400);
         }
         return JsonResponser::send(false, "Record found successfully", $record, 200);
+    }
+
+    public function cancelSubscription(Request $request, $id)    
+    {
+        try {
+            $record = EcommerceProductSubscription::with('ecommerceproduct', 'ecommerceorderdetails.ecommerceorder')->where('id', $id)->first();
+            if(is_null($record)){
+                return JsonResponser::send(true, "Record not found", null, 400);
+            }
+            $currentUserInstance = UserMgtHelper::userInstance();
+
+			DB::beginTransaction();
+            
+            $record->update([
+                'status' => "Inactive",
+                'cancel_description' => $request->cancel_description,
+                'cancel_reason' => $request->cancel_reason,
+            ]); 
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $record->id,
+                'action_type' => "Models\EcommerceProductSubscription",
+                'log_name' => "Subscription cancelled Successfully",
+                'action' => 'Update',
+                'description' => "Subscription cancelled Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+            DB::commit();
+            return JsonResponser::send(false, 'Subscription has been cancelled successfully', $record, 200);
+
+        } catch (\Throwable $error) {
+            logger($error);
+            DB::rollback();
+            return JsonResponser::send(true, $error->getMessage(), null, 500);
+        }
+    }
+
+    public function updateSubscription(Request $request, $id)    
+    {
+        try {
+            $record = EcommerceProductSubscription::with('ecommerceproduct', 'ecommerceorderdetails.ecommerceorder')->where('id', $id)->first();
+            if(is_null($record)){
+                return JsonResponser::send(true, "Record not found", null, 400);
+            }
+            $currentUserInstance = UserMgtHelper::userInstance();
+
+			DB::beginTransaction();
+            
+            $record->update([
+                'interval' => $request->inteval,
+            ]); 
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $record->id,
+                'action_type' => "Models\EcommerceProductSubscription",
+                'log_name' => "Subscription updated Successfully",
+                'action' => 'Update',
+                'description' => "Subscription updated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+            DB::commit();
+            return JsonResponser::send(false, 'Subscription has been updated successfully', $record, 200);
+
+        } catch (\Throwable $error) {
+            logger($error);
+            DB::rollback();
+            return JsonResponser::send(true, $error->getMessage(), null, 500);
+        }
     }
 
 }
