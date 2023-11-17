@@ -13,7 +13,9 @@ use SbscPackage\Ecommerce\Helpers\UserMgtHelper;
 use Illuminate\Routing\Controller as BaseController;
 use SbscPackage\Ecommerce\Services\Paystack;
 use Carbon\Carbon;
+use SbscPackage\Ecommerce\Interfaces\GeneralStatusInterface;
 use SbscPackage\Ecommerce\Interfaces\OrderStatusInterface;
+use SbscPackage\Ecommerce\Interfaces\UserStatusInterface;
 use SbscPackage\Ecommerce\Models\EcommerceCard;
 use SbscPackage\Ecommerce\Models\EcommerceOrderDetails;
 
@@ -139,20 +141,35 @@ class SubscriptionController extends BaseController
     public function chargeCustomer()
     {
         try {
-            $pendingSubscription = EcommerceProductSubscription::get();
+            $pendingSubscription = EcommerceProductSubscription::where('status', GeneralStatusInterface::ACTIVE)->where('next_sub_date', Carbon::today())->get();
 
             if(count($pendingSubscription) == 0){
                 return JsonResponser::send(true, "No record Available", [], 400);
             }
 
             foreach ($pendingSubscription as $subscription) {
+                $interval = $subscription->interval;
+                if($interval == "monthly"){
+                    $nextPeriod = Carbon::parse($subscription->next_sub_date)->addMonth(1);
+                } elseif ($interval == "daily"){
+                    $nextPeriod = Carbon::parse($subscription->next_sub_date)->addDay(1);
+                } elseif ($interval == "weekly"){
+                    $nextPeriod = Carbon::parse($subscription->next_sub_date)->addDay(7);
+                } elseif ($interval == "quaterly"){
+                    $nextPeriod = Carbon::parse($subscription->next_sub_date)->addMonth(3);
+                } elseif ($interval == "6months"){
+                    $nextPeriod = Carbon::parse($subscription->next_sub_date)->addMonth(6);
+                }elseif ($interval == "yearly"){
+                    $nextPeriod = Carbon::parse($subscription->next_sub_date)->addYear(1);
+                }
+                
                 $auth_code = $subscription->auth_code;
                 $amount = ($subscription->ecommerceproduct->sales_price * $subscription->quantity) + $subscription->ecommerceproduct->shipping_fee;
 
                 $request = [
                     "authorization_code" => $auth_code, 
                     "email" => $subscription->user->email,
-                    "amount" =>  $amount
+                    "amount" =>  $amount * 100
                 ];
 
                 $subscribe = Paystack::chargeAuthorization($request);
@@ -192,6 +209,9 @@ class SubscriptionController extends BaseController
                 'cancel_description' => $request->cancel_description,
                 'cancel_reason' => $request->cancel_reason,
             ]); 
+
+            //update paystack and send an email
+            
 
             $dataToLog = [
                 'causer_id' => $currentUserInstance->id,

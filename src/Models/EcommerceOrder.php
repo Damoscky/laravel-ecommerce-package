@@ -5,8 +5,9 @@ namespace SbscPackage\Ecommerce\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
+use SbscPackage\Ecommerce\Services\Transactions\Transactions;
 
-class EcommerceOrderDetails extends Model
+class EcommerceOrder extends Model
 {
     use HasFactory;
 
@@ -35,6 +36,11 @@ class EcommerceOrderDetails extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function ecommercetransaction()
+    {
+        return $this->hasOne(EcommerceTransaction::class, 'order_id');
+    }
     
      public function ecommerceshippingaddress()
     {
@@ -44,10 +50,6 @@ class EcommerceOrderDetails extends Model
     public function ecommercebillingdetails()
     {
         return $this->hasOne(EcommerceBillingDetails::class);
-    }
-    public function logisticsCompany()
-    {
-        return $this->belongsTo(LogisticsCompany::class, 'logistics_company_id');
     }
 
     public function getUserDetailsAttribute()

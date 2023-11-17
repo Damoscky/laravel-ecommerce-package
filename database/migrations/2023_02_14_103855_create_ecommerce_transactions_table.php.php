@@ -17,6 +17,7 @@ class CreateEcommerceTransactionsTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('card_id')->nullable();
+            $table->unsignedBigInteger('order_id')->nullable();
             $table->string("reference")->nullable();
             $table->string("channel")->nullable();
             $table->string("currency")->nullable();

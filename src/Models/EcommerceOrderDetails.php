@@ -36,6 +36,12 @@ class EcommerceOrderDetails extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function logisticsCompany()
+    {
+        return $this->belongsTo(LogisticsCompany::class, 'logistics_company_id');
+    }
+
+
     public function getUserDetailsAttribute()
     {
         $user = $this->user;

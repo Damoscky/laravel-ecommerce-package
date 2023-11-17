@@ -27,6 +27,7 @@ use Hash, DB;
 use Carbon\Carbon;
 use SbscPackage\Ecommerce\Interfaces\GeneralStatusInterface;
 use SbscPackage\Ecommerce\Interfaces\OrderStatusInterface;
+use SbscPackage\Ecommerce\Interfaces\PaymentStatusInterface;
 use SbscPackage\Ecommerce\Models\EcommerceCard;
 use SbscPackage\Ecommerce\Models\EcommerceComplaint;
 use SbscPackage\Ecommerce\Models\EcommerceOrder;
@@ -149,6 +150,7 @@ class OrderController extends BaseController
 				'email' => $currentUserInstance->email,
 				'shipping_fee' => $request->total_shipping_fee,
 				'payment_method' => $request->payment_method,
+				'payment_gateway' => $request->payment_gateway,
 				'total_price' => $request->total_price,
 				'orderID' => $orderID,
 				'orderNO' => $orderID,
@@ -256,6 +258,7 @@ class OrderController extends BaseController
 					$trx = [
 						"card_id" => $card->id,
 						"user_id" => auth()->user()->id,
+						"order_id" => $order->id,
 						"paidAt" => Carbon::parse($result["data"]["paid_at"])->format("Y-m-d H:i:s"),
 						"initializedAt" => Carbon::parse($result["data"]["created_at"])->format("Y-m-d H:i:s")
 					];
@@ -743,6 +746,24 @@ class OrderController extends BaseController
 					'cancel_description' => $request->cancel_description,
 					'cancel_reason' => $request->cancel_reason,
                 ]); 
+
+				//send email and refund customer
+				if($record->payment_status == PaymentStatusInterface::SUCCESS && $record->ecommerceorder->payment_method == "card"){
+					if($record->ecommerceorder->payment_gateway == "Paystack"){
+						$paystackData = [
+							'transaction' => isset($record->ecommerceorder->ecommercetransaction) ? $record->ecommerceorder->ecommercetransaction->reference : "",
+							'amount' => ($record->unit_price * $record->quantity_ordered)  * 100,
+						];
+						$result = Paystack::refundTransaction($paystackData);
+						$record->update([
+                            'payment_status' => "Refund"
+						]);
+					}
+					
+					if($record->ecommerceorder->payment_gateway == "Stripe"){
+					    
+					}
+				}
 
                 $dataToLog = [
                     'causer_id' => $currentUserInstance->id,

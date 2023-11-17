@@ -35,7 +35,7 @@ class SubscriptionController extends BaseController
                 "email" => $request->email
             ];
 
-            // Mail::to($request->email)->send(new SubscriptionEmail($data));
+            Mail::to($request->email)->send(new SubscriptionEmail($data));
 
             return JsonResponser::send(false, "You've sucessfully subscribed to our newsletter", $subscription, 200);
         } catch (\Throwable $error) {
