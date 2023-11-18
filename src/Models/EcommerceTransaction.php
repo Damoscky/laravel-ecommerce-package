@@ -21,4 +21,9 @@ class EcommerceTransaction extends Model
     {
         return $this->belongsTo(EcommerceCard::class);
     }
+
+    public function order()
+    {
+        return $this->belongsTo(EcommerceOrder::class, 'order_id');
+    }
 }

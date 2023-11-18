@@ -15,7 +15,7 @@ class EcommerceCustomerMiddleware
      */
     public function handle($request, Closure $next)
     {
-        if (auth()->user()->roles[0]->slug != "ecommercecustomer") {
+        if (!auth()->user()->hasRole(["ecommercecustomer"])) {
             return response()->json([
                 "success" => false,
                 "message" => "Access Denied :("

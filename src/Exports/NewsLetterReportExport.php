@@ -9,7 +9,7 @@ use DB;
 use Auth, Date;
 use Carbon\Carbon;
 
-class AuditLogsReportExport implements FromCollection, WithHeadings, WithMapping
+class NewsLetterReportExport implements FromCollection, WithHeadings, WithMapping
 {
 
     protected $records;
@@ -31,16 +31,13 @@ class AuditLogsReportExport implements FromCollection, WithHeadings, WithMapping
     public function map($records): array
     {
         return [
-            $records->id,
-            $records->causer->firstname. ' '.$records->causer->lastname,
-            $records->causer->phoneno,
-            $records->action,
+            $records->email,
             Carbon::parse($records->created_at),
         ];
     }
 
     public function headings(): array
     {
-        return array('ID', 'Name', 'Phone', 'Action', 'Date Created');
+        return array('Email', 'Date Subscribed');
     }
 }

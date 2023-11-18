@@ -14,6 +14,10 @@ use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Plan\PlanController AS Admin
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Order\OrderController AS AdminOrderController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Report\ReportController AS AdminReportController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Vendor\RegisterController AS VendorRegisterController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Banner\BannerController AS AdminBannerController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\ShippingAndLogistics\ShippingAndLogisticsController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\ShippingAndLogistics\LogisticsCompanyController;
+use SbscPackage\Ecommerce\Http\Controllers\v1\Admin\Shipping\ShippingController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\RegisterController AS CustomerRegisterController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\ProfileController AS CustomerProfileController;
 use SbscPackage\Ecommerce\Http\Controllers\v1\Customer\CartController AS CustomerCartController;
@@ -69,6 +73,19 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::get('/{id}', [GuestProductController::class, 'show']);
 
         });
+        
+        Route::get('/countries', [GuestProductController::class, 'countries']);
+        Route::get('/regions', [GuestProductController::class, 'regions']);
+        Route::get('/zones', [GuestProductController::class, 'zones']);
+        Route::get('/region/{id}', [GuestProductController::class, 'regionByID']);
+        Route::get('/zone/{id}', [GuestProductController::class, 'zoneByID']);
+        // Route::get('/categories', [GuestProductController::class, 'getAllCategoriesNoPagination']);
+        Route::get('/states', [GuestProductController::class, 'states']);
+        Route::get('/country/{id}', [GuestProductController::class, 'countryByID']);
+
+
+        //charge customer
+        Route::get('customer/subscription/initiate', [CustomerOrderController::class, 'chargeCustomer']);
     });
 
 
@@ -98,11 +115,13 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
          /*** Order Route ***/
         Route::group(['prefix' => 'orders'], function () {
             Route::get('/details/{id}', [CustomerOrderController::class, 'orderdetails']);
+            Route::post('/cancel/{id}', [CustomerOrderController::class, 'cancelOrder']);
             Route::post('/all', [CustomerOrderController::class, 'index']);
             Route::post('/store', [CustomerOrderController::class, 'store']);
             Route::get('/dashboard', [CustomerOrderController::class, 'dashboard']);
             Route::post('/validate-stock', [CustomerOrderController::class, 'checkStock']);
             Route::post('/create/complaint', [CustomerOrderController::class, 'createComplain']);
+            Route::get("shippingfee", [CustomerOrderController::class, "getUserShippingZone"]);
             Route::post('/complaints', [CustomerOrderController::class, 'complaints']);
             Route::post('/subscription', [CustomerSubscriptionController::class, 'store']);
         });
@@ -110,8 +129,10 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
         /*** Subscription Route ***/
         Route::group(['prefix' => 'subscription'], function () {
             Route::post('/all', [CustomerSubscriptionController::class, 'index']);
-            Route::get('initiate', [CustomerOrderController::class, 'chargeCustomer']);
+            // Route::get('initiate', [CustomerOrderController::class, 'chargeCustomer']);
             Route::get('/view/{id}', [CustomerSubscriptionController::class, 'show']);
+            Route::post('/cancel/{id}', [CustomerSubscriptionController::class, 'cancelSubscription']);
+            Route::put('/update/{id}', [CustomerSubscriptionController::class, 'updateSubscription']);
         });
 
     });
@@ -124,6 +145,42 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
     // 'middleware' => ["core", "admin"]
     Route::group(['prefix' => 'admin', "namespace" => "v1\Admin", 'middleware' => ["auth:api", "ecommercesuperadmin"]], function () {
         Route::post('/dashboard', [AdminDashboardController::class, 'dashboard']);
+
+        /** Banner Route ***/
+        Route::group(["prefix" => "banner", "namespace" => "v1\Admin"], function () {
+            Route::post('/create', [AdminBannerController::class, 'store']);
+            Route::get('/', [AdminBannerController::class, 'index']);
+        });
+        
+        // Shipping
+        Route::group(['prefix' => 'shipping'], function () {
+            Route::post('/', [ShippingAndLogisticsController::class, 'index']);
+            Route::post('/assigned-orders', [ShippingAndLogisticsController::class, 'ordersWithLogistic']);
+            Route::post('/orders/logistics', [ShippingAndLogisticsController::class, 'ordersWithLogistic']);
+            Route::get('/stats', [ShippingAndLogisticsController::class, 'shippingOrdersStat']);
+            Route::put('/{id}', [ShippingAndLogisticsController::class, 'updateOrderStatus']);
+            Route::post('/export', [ShippingAndLogisticsController::class, 'exportShippingOrders']);
+            Route::put('/logistics/{id}', [ShippingAndLogisticsController::class, 'attachLogisticsCompany']);
+            Route::post('/zone', [ShippingController::class, 'shippingZone']);
+            Route::post('/zone/create', [ShippingController::class, 'createShippingZone']);
+            Route::get('/zone/show/{id}', [ShippingController::class, 'showShippingZone']);
+            Route::put('/zone/update/{id}', [ShippingController::class, 'updateShippingZone']);
+            Route::delete('/zone/delete/{id}', [ShippingController::class, 'deleteShippingZone']);
+            Route::put('/zone/activate/{id}', [ShippingController::class, 'activateShippingZone']);
+            Route::put('/zone/deactivate/{id}', [ShippingController::class, 'deactivateShippingZone']);
+        });
+
+        // Logistics
+        Route::group(['prefix' => 'logistics'], function () {
+            Route::post('/', [LogisticsCompanyController::class, 'index']);
+            Route::get('/all', [LogisticsCompanyController::class, 'getAllLogisticsCompany']);
+            Route::post('/export', [LogisticsCompanyController::class, 'exportLogisticsCompany']);
+            Route::post('/export', [LogisticsCompanyController::class, 'exportLogisticsCompany']);
+            Route::post('/create', [LogisticsCompanyController::class, 'create']);
+            Route::get('/{id}', [LogisticsCompanyController::class, 'show']);
+            Route::put('/update/{id}', [LogisticsCompanyController::class, 'update']);
+            Route::put('/status/{id}', [LogisticsCompanyController::class, 'updateLogisticsCompanyStatus']);
+        });
 
 
          /** Admin Category Route ***/
@@ -192,6 +249,7 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
         Route::group(['prefix' => 'customers'], function () {
             Route::get('/stats', [AdminCustomerController::class, 'customerStat']);
             Route::post('/', [AdminCustomerController::class, 'index']);
+            Route::post('/crm', [AdminCustomerController::class, 'indexCRM']);
             Route::post('/active', [AdminCustomerController::class, 'activeCustomers']);
             Route::post('/inactive', [AdminCustomerController::class, 'inactiveCustomers']);
             Route::put('/update/status/{id}', [AdminCustomerController::class, 'updateCustomerStatus']);

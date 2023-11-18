@@ -22,6 +22,8 @@ return new class extends Migration
             $table->mediumText('tags')->nullable();
             $table->string('brand_name')->nullable();
             $table->string('sku')->nullable();
+            $table->string('number_of_duration')->nullable();
+            $table->string('duration_type')->nullable();
             $table->integer('minimum_purchase_per_quantity');
             $table->string('manage_stock_quantity')->nullable();
             $table->bigInteger('quantity_supplied')->default(0);
