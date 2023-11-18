@@ -10,7 +10,9 @@ use SbscPackage\Ecommerce\Helpers\UserMgtHelper;
 use SbscPackage\Ecommerce\Models\EcommerceNewsletterSubscriber;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
+use SbscPackage\Ecommerce\Notifications\NewsLetterSubscriptionNotification;
 
 class SubscriptionController extends BaseController
 {
@@ -22,6 +24,7 @@ class SubscriptionController extends BaseController
         if ($validate->fails()) {
             return JsonResponser::send(true, $validate->errors()->first(), $validate->errors()->all());
         }
+        DB::beginTransaction();
 
         try {
 
@@ -35,12 +38,14 @@ class SubscriptionController extends BaseController
                 "email" => $request->email
             ];
 
-            Mail::to($request->email)->send(new SubscriptionEmail($data));
+            Notification::route('mail', $request->email)->notify(new NewsLetterSubscriptionNotification($data));
 
+            DB::commit();
             return JsonResponser::send(false, "You've sucessfully subscribed to our newsletter", $subscription, 200);
         } catch (\Throwable $error) {
+            DB::rollBack;
             logger($error);
-            return JsonResponser::send(true, 'Internal server error!', [], 500);
+            return JsonResponser::send(true, $error->getMessage(), [], 500);
         }
     }
 

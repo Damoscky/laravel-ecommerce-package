@@ -34,6 +34,7 @@ use SbscPackage\Ecommerce\Models\EcommerceOrder;
 use SbscPackage\Ecommerce\Models\EcommerceOrderDetails;
 use SbscPackage\Ecommerce\Models\EcommerceProductSubscription;
 use SbscPackage\Ecommerce\Models\EcommerceTransaction;
+use SbscPackage\Ecommerce\Models\ShippingZone;
 use SbscPackage\Ecommerce\Services\Transactions\Transactions;
 
 class OrderController extends BaseController
@@ -759,12 +760,16 @@ class OrderController extends BaseController
                             'payment_status' => "Refund"
 						]);
 					}
-					
-					if($record->ecommerceorder->payment_gateway == "Stripe"){
-					    
-					}
 				}
-
+				//check if every items has been cancelled
+				$orderData = EcommerceOrderDetails::where('ecommerce_order_id', $record->ecommerce_order_id)->get();
+				if ($orderData->every(function ($order) {
+					return $order->status === OrderStatusInterface::CANCELLED;
+				})) {
+					$record->ecommerceorder->update([
+						'status' => OrderStatusInterface::CANCELLED
+					]);
+				}
                 $dataToLog = [
                     'causer_id' => $currentUserInstance->id,
                     'action_id' => $record->id,
@@ -1020,6 +1025,36 @@ class OrderController extends BaseController
 		} catch (\Throwable $th) {
 			DB::rollBack();
 			return JsonResponser::send(true, $th->getMessage(), [], 500);
+		}
+	}
+
+	public function getUserShippingZone()
+	{
+		try {
+			$userInstance = UserMgtHelper::userInstance();
+			$userId = $userInstance->id;
+
+			$userState = isset($userInstance->usershipping) ? $userInstance->usershipping->state : optional($userInstance->usershipping)->state;
+
+			if (is_null($userState)) {
+				return JsonResponser::send(true, "Kindly update your profile information", [], 400);
+			}
+
+			$shippingZones = ShippingZone::get();
+			$shippingFee = 0;
+
+			foreach ($shippingZones as $key => $shippingZone) {
+				$stateName = $shippingZone->state_name;
+				foreach ($stateName as $state) {
+					if ($state['name'] == $userState) {
+						$shippingFee = $shippingZone['price'];
+					}
+				}
+			}
+
+			return JsonResponser::send(false, "Record found successfully", $shippingFee, 200);
+		} catch (\Throwable $error) {
+			return JsonResponser::send(true, $error->getMessage(), []);
 		}
 	}
 

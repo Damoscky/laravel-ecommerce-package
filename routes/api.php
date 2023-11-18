@@ -121,6 +121,7 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::get('/dashboard', [CustomerOrderController::class, 'dashboard']);
             Route::post('/validate-stock', [CustomerOrderController::class, 'checkStock']);
             Route::post('/create/complaint', [CustomerOrderController::class, 'createComplain']);
+            Route::get("shippingfee", [CustomerOrderController::class, "getUserShippingZone"]);
             Route::post('/complaints', [CustomerOrderController::class, 'complaints']);
             Route::post('/subscription', [CustomerSubscriptionController::class, 'store']);
         });
