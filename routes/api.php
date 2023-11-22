@@ -95,7 +95,7 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::delete('/{id}', [CustomerWishlistController::class, 'destroy']);
         });
         
-         /*** Order Route ***/
+        /*** Order Route ***/
         Route::group(['prefix' => 'orders'], function () {
             Route::get('/details/{id}', [CustomerOrderController::class, 'orderdetails']);
             Route::post('/all', [CustomerOrderController::class, 'index']);
