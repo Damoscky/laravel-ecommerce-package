@@ -11,6 +11,7 @@ class Transactions
         EcommerceTransaction::create([
             "user_id" => $data["user_id"],
             "card_id" => $data["card_id"],
+            "order_id" => $data["order_id"],
             "reference" => $data["reference"],
             "channel" => $data["channel"],
             "currency" => $data["currency"],

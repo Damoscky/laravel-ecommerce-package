@@ -273,6 +273,19 @@ class EcommercePermissionsTableSeeder extends Seeder
                 'description' => 'Manage EcommercePlan Management',
                 'model'       => 'Permission',
             ],
+
+            [
+                'name'        => 'Can View Ecommerce Banner',
+                'slug'        => 'view.ecommercebanner',
+                'description' => 'Ecommerce Banner Management',
+                'model'       => 'Permission',
+            ],
+            [
+                'name'        => 'Can Create Ecommerce Banner',
+                'slug'        => 'create.ecommercebanner',
+                'description' => 'Ecommerce Banner Management',
+                'model'       => 'Permission',
+            ],
         ];
 
         /*

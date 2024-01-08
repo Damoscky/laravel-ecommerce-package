@@ -28,7 +28,7 @@ class WishlistController extends BaseController
      */
     public function index()
     {
-        $wishlists = EcommerceWishlist::where('user_id', auth()->user()->id)->with('ecommercesproduct')->paginate(10);
+        $wishlists = EcommerceWishlist::where('user_id', auth()->user()->id)->with('ecommerceproduct')->paginate(10);
         // Check if the user is signed in and has the artwork in their wishlist
         return JsonResponser::send(false, $wishlists->count() . ' Item(s) Found', $wishlists, 200);
 

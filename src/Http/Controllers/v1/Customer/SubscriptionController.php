@@ -13,6 +13,9 @@ use SbscPackage\Ecommerce\Helpers\UserMgtHelper;
 use Illuminate\Routing\Controller as BaseController;
 use SbscPackage\Ecommerce\Services\Paystack;
 use Carbon\Carbon;
+use SbscPackage\Ecommerce\Interfaces\GeneralStatusInterface;
+use SbscPackage\Ecommerce\Interfaces\OrderStatusInterface;
+use SbscPackage\Ecommerce\Interfaces\UserStatusInterface;
 use SbscPackage\Ecommerce\Models\EcommerceCard;
 use SbscPackage\Ecommerce\Models\EcommerceOrderDetails;
 
@@ -138,20 +141,35 @@ class SubscriptionController extends BaseController
     public function chargeCustomer()
     {
         try {
-            $pendingSubscription = EcommerceProductSubscription::get();
+            $pendingSubscription = EcommerceProductSubscription::where('status', GeneralStatusInterface::ACTIVE)->where('next_sub_date', Carbon::today())->get();
 
             if(count($pendingSubscription) == 0){
                 return JsonResponser::send(true, "No record Available", [], 400);
             }
 
             foreach ($pendingSubscription as $subscription) {
+                $interval = $subscription->interval;
+                if($interval == "monthly"){
+                    $nextPeriod = Carbon::parse($subscription->next_sub_date)->addMonth(1);
+                } elseif ($interval == "daily"){
+                    $nextPeriod = Carbon::parse($subscription->next_sub_date)->addDay(1);
+                } elseif ($interval == "weekly"){
+                    $nextPeriod = Carbon::parse($subscription->next_sub_date)->addDay(7);
+                } elseif ($interval == "quaterly"){
+                    $nextPeriod = Carbon::parse($subscription->next_sub_date)->addMonth(3);
+                } elseif ($interval == "6months"){
+                    $nextPeriod = Carbon::parse($subscription->next_sub_date)->addMonth(6);
+                }elseif ($interval == "yearly"){
+                    $nextPeriod = Carbon::parse($subscription->next_sub_date)->addYear(1);
+                }
+                
                 $auth_code = $subscription->auth_code;
                 $amount = ($subscription->ecommerceproduct->sales_price * $subscription->quantity) + $subscription->ecommerceproduct->shipping_fee;
 
                 $request = [
                     "authorization_code" => $auth_code, 
                     "email" => $subscription->user->email,
-                    "amount" =>  $amount
+                    "amount" =>  $amount * 100
                 ];
 
                 $subscribe = Paystack::chargeAuthorization($request);
@@ -173,6 +191,81 @@ class SubscriptionController extends BaseController
             return JsonResponser::send(true, "No record found", [], 400);
         }
         return JsonResponser::send(false, "Record found successfully", $record, 200);
+    }
+
+    public function cancelSubscription(Request $request, $id)    
+    {
+        try {
+            $record = EcommerceProductSubscription::with('ecommerceproduct', 'ecommerceorderdetails.ecommerceorder')->where('id', $id)->first();
+            if(is_null($record)){
+                return JsonResponser::send(true, "Record not found", null, 400);
+            }
+            $currentUserInstance = UserMgtHelper::userInstance();
+
+			DB::beginTransaction();
+            
+            $record->update([
+                'status' => "Inactive",
+                'cancel_description' => $request->cancel_description,
+                'cancel_reason' => $request->cancel_reason,
+            ]); 
+
+            //update paystack and send an email
+            
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $record->id,
+                'action_type' => "Models\EcommerceProductSubscription",
+                'log_name' => "Subscription cancelled Successfully",
+                'action' => 'Update',
+                'description' => "Subscription cancelled Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+            DB::commit();
+            return JsonResponser::send(false, 'Subscription has been cancelled successfully', $record, 200);
+
+        } catch (\Throwable $error) {
+            logger($error);
+            DB::rollback();
+            return JsonResponser::send(true, $error->getMessage(), null, 500);
+        }
+    }
+
+    public function updateSubscription(Request $request, $id)    
+    {
+        try {
+            $record = EcommerceProductSubscription::with('ecommerceproduct', 'ecommerceorderdetails.ecommerceorder')->where('id', $id)->first();
+            if(is_null($record)){
+                return JsonResponser::send(true, "Record not found", null, 400);
+            }
+            $currentUserInstance = UserMgtHelper::userInstance();
+
+			DB::beginTransaction();
+            
+            $record->update([
+                'interval' => $request->inteval,
+            ]); 
+
+            $dataToLog = [
+                'causer_id' => $currentUserInstance->id,
+                'action_id' => $record->id,
+                'action_type' => "Models\EcommerceProductSubscription",
+                'log_name' => "Subscription updated Successfully",
+                'action' => 'Update',
+                'description' => "Subscription updated Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+            ];
+
+            ProcessAuditLog::storeAuditLog($dataToLog);
+            DB::commit();
+            return JsonResponser::send(false, 'Subscription has been updated successfully', $record, 200);
+
+        } catch (\Throwable $error) {
+            logger($error);
+            DB::rollback();
+            return JsonResponser::send(true, $error->getMessage(), null, 500);
+        }
     }
 
 }

@@ -6,6 +6,10 @@ use SbscPackage\Ecommerce\Helpers\ProcessAuditLog;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use App\Models\User;
+use SbscPackage\Ecommerce\Models\Region;
+use SbscPackage\Ecommerce\Models\State;
+use SbscPackage\Ecommerce\Models\Zone;
+use SbscPackage\Ecommerce\Models\Country;
 use SbscPackage\Ecommerce\Models\EcommerceUserShipping;
 use SbscPackage\Ecommerce\Models\EcommerceUserBilling;
 use SbscPackage\Ecommerce\Responser\JsonResponser;
@@ -133,7 +137,7 @@ class ProductController extends BaseController
         if ($user) {
            foreach ($records as $record) {
                 foreach ($record->ecommerceproduct as $product) {
-                    $wishlist = $user->userecommercewishlist()->where('ecommerce_product_id', $record->id)->exists();
+                    $wishlist = $user->userecommercewishlist()->where('ecommerce_product_id', $product->id)->exists();
                     $product->wishlist = $wishlist;
                 }
            }
@@ -269,6 +273,118 @@ class ProductController extends BaseController
             logger($error);
             return JsonResponser::send(true, $error->getMessage(), [], 500);
         }        
+    }
+
+    public function countries()
+    {
+        try {
+            $record = Country::select('id', 'name', 'region_id')->with('regions')->get();
+
+            if (!$record) {
+                return JsonResponser::send(true, 'Record Not Found', null, 404);
+            }
+
+            return JsonResponser::send(false, 'Record(s) found successully!', $record, 200);
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+
+    public function regions()
+    {
+        try {
+            $record = Region::select('id', 'name', 'zone_id')->with('countries')->get();
+
+            if (!$record) {
+                return JsonResponser::send(true, 'Record Not Found', null, 404);
+            }
+
+            return JsonResponser::send(false, 'Record(s) found successully!', $record, 200);
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+
+    public function zones()
+    {
+        try {
+            $record = Zone::select('id', 'name')->with('regions')->get();
+
+            if (!$record) {
+                return JsonResponser::send(true, 'Record Not Found', null, 404);
+            }
+
+            return JsonResponser::send(false, 'Record(s) found successully!', $record, 200);
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+
+    public function regionByID($id)
+    {
+        try {
+            $record = Region::select('id', 'name', 'zone_id')->with('countries')->where('id', $id)->first();
+
+            if (!$record) {
+                return JsonResponser::send(true, 'Record Not Found', null, 404);
+            }
+
+            return JsonResponser::send(false, 'Record(s) found successully!', $record, 200);
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+
+    public function zoneByID($id)
+    {
+        try {
+            $record = Zone::select('id', 'name')->with('regions')->where('id', $id)->first();
+
+            if (!$record) {
+                return JsonResponser::send(true, 'Record Not Found', null, 404);
+            }
+
+            return JsonResponser::send(false, 'Record(s) found successully!', $record, 200);
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+
+    public function states()
+    {
+        try {
+            $record = State::select('id', 'name', 'country_id')->with('countries')->get();
+
+            if (!$record) {
+                return JsonResponser::send(true, 'Record Not Found', null, 404);
+            }
+
+            return JsonResponser::send(false, 'Record(s) found successully!', $record, 200);
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
+
+    public function countryByID($id)
+    {
+        try {
+            $record = State::select('id', 'name')->where('country_id', $id)->get();
+
+            if (!$record) {
+                return JsonResponser::send(true, 'Record Not Found', null, 404);
+            }
+
+            return JsonResponser::send(false, 'Record(s) found successully!', $record, 200);
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, $error->getMessage(), [], 500);
+        }
     }
 
 }

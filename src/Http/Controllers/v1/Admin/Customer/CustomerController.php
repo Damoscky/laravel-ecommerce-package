@@ -32,7 +32,6 @@ class CustomerController extends BaseController
 
         (!is_null($request->product_start_date) && !is_null($request->product_end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
 
-
         try {
             $roleName = "ecommercecustomer";
             $customers = User::with('usershipping', 'userbilling')->whereHas('roles', function ($roleTable) use ($roleName) {
@@ -50,7 +49,7 @@ class CustomerController extends BaseController
             })->when($customerNameSearchParam, function ($query, $customerNameSearchParam) use ($request) {
                 return $query->where('firstname', 'LIKE', '%' . $customerNameSearchParam . '%');
             })->when($statusSearchParam, function ($query, $statusSearchParam) use ($request) {
-                return $query->where('status', $statusSearchParam);
+                return $query->where('is_active', $statusSearchParam);
             });
 
             if(isset($request->export)){
@@ -67,6 +66,51 @@ class CustomerController extends BaseController
         }
     }
 
+    public function indexCRM(Request $request)
+    {
+        if(!auth()->user()->hasPermission('view.ecommercecustomers')){
+            return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
+        $customerNameSearchParam = $request->customer_name;
+        $statusSearchParam = $request->status;
+        $sortByRequestParam = $request->sort_by;
+
+        (!is_null($request->product_start_date) && !is_null($request->product_end_date)) ? $dateSearchParams = true : $dateSearchParams = false;
+
+        try {
+            $roleName = "crmcustomer";
+            $customers = User::with('usershipping', 'userbilling', 'institutionCustomer')->whereHas('roles', function ($roleTable) use ($roleName) {
+                return $roleTable->where('slug', $roleName);
+            })->when($sortByRequestParam, function ($query) use ($request) {
+                if(isset($request->sort_by) && $request->sort_by == "alphabetically"){
+                    return $query->orderBy('firstname', 'asc');
+                }else if(isset($request->sort_by) && $request->sort_by == "date_old_to_new"){
+                    return $query->orderBy('created_at', 'asc');
+                }else if(isset($request->sort_by) && $request->sort_by == "date_new_to_old"){
+                    return $query->orderBy('created_at', 'desc');
+                }else{
+                    return $query->orderBy('created_at', 'desc');
+                }
+            })->when($customerNameSearchParam, function ($query, $customerNameSearchParam) use ($request) {
+                return $query->where('firstname', 'LIKE', '%' . $customerNameSearchParam . '%');
+            })->when($statusSearchParam, function ($query, $statusSearchParam) use ($request) {
+                return $query->where('is_active', $statusSearchParam);
+            });
+
+            if(isset($request->export)){
+                $customers = $customers->get();
+                return Excel::download(new CustomerReportExport($customers), 'customersreportdata.xlsx');
+            }else{
+                $customers = $customers->paginate(12);
+                return JsonResponser::send(false, 'Record found successfully', $customers, 200);
+            }
+
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, 'Internal server error!', [], 500);
+        }
+    }
     public function activeCustomers(Request $request)
     {
         if(!auth()->user()->hasPermission('view.ecommercecustomers')){
@@ -172,7 +216,7 @@ class CustomerController extends BaseController
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
         }
         
-        $user = User::with('usershipping', 'userbilling')->where('id', $id)->first();
+        $user = User::with('usershipping', 'userbilling', 'institutionCustomer')->where('id', $id)->first();
         $totalOrders = EcommerceOrderDetails::where('user_id', $user->id)->count();
         $totalSpending = EcommerceOrder::where('user_id', $user->id)->sum('total_price');
         $user->totalOrders = $totalOrders;

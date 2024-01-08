@@ -316,4 +316,18 @@ class Paystack
         // Make post request
         return $result = CurlService::postRequest($url, $request, $headerParams);
     }
+
+    public static function refundTransaction($request)
+    {
+        // generate access token
+        $baseUrl = env('PAYSTACK_PAYMENT_URL');
+        $url = $baseUrl.'/refund';
+
+        $headerParams = [
+            'Authorization: Bearer '. env('PAYSTACK_SECRET_KEY'),
+        ];
+
+        // Make post request
+        return $result = CurlService::postRequest($url, $request, $headerParams);
+    }
 }

@@ -20,6 +20,7 @@ class CreateEcommerceOrdersTable extends Migration
             $table->string('payment_type')->nullable();
             $table->string('transaction_id')->nullable();
             $table->string('shipping_method')->nullable();
+            $table->string('payment_gateway')->nullable();
             $table->string('payment_method')->nullable();
             $table->integer('shipping_fee')->default(0);
             $table->string('email')->nullable();

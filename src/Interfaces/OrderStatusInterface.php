@@ -11,4 +11,5 @@ interface OrderStatusInterface {
     const RETURNED = "Returned";
     const PROCESSING = "Processing";
     const PENDING = "Pending";
+    const ENROUTE = "Enroute";
 }

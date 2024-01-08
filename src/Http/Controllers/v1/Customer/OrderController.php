@@ -26,12 +26,15 @@ use Illuminate\Support\Facades\Validator;
 use Hash, DB;
 use Carbon\Carbon;
 use SbscPackage\Ecommerce\Interfaces\GeneralStatusInterface;
+use SbscPackage\Ecommerce\Interfaces\OrderStatusInterface;
+use SbscPackage\Ecommerce\Interfaces\PaymentStatusInterface;
 use SbscPackage\Ecommerce\Models\EcommerceCard;
 use SbscPackage\Ecommerce\Models\EcommerceComplaint;
 use SbscPackage\Ecommerce\Models\EcommerceOrder;
 use SbscPackage\Ecommerce\Models\EcommerceOrderDetails;
 use SbscPackage\Ecommerce\Models\EcommerceProductSubscription;
 use SbscPackage\Ecommerce\Models\EcommerceTransaction;
+use SbscPackage\Ecommerce\Models\ShippingZone;
 use SbscPackage\Ecommerce\Services\Transactions\Transactions;
 
 class OrderController extends BaseController
@@ -148,6 +151,7 @@ class OrderController extends BaseController
 				'email' => $currentUserInstance->email,
 				'shipping_fee' => $request->total_shipping_fee,
 				'payment_method' => $request->payment_method,
+				'payment_gateway' => $request->payment_gateway,
 				'total_price' => $request->total_price,
 				'orderID' => $orderID,
 				'orderNO' => $orderID,
@@ -255,6 +259,7 @@ class OrderController extends BaseController
 					$trx = [
 						"card_id" => $card->id,
 						"user_id" => auth()->user()->id,
+						"order_id" => $order->id,
 						"paidAt" => Carbon::parse($result["data"]["paid_at"])->format("Y-m-d H:i:s"),
 						"initializedAt" => Carbon::parse($result["data"]["created_at"])->format("Y-m-d H:i:s")
 					];
@@ -455,6 +460,18 @@ class OrderController extends BaseController
 						'state' => $currentUserInstance->usershipping->state,
 						'city' => $currentUserInstance->usershipping->city,
 						'postal_code' => $currentUserInstance->usershipping->postal_code,
+					]);
+				}else{
+					EcommerceShippingAddress::create([
+						'fullname' => $currentUserInstance->userbilling->firstname . ' ' . $currentUserInstance->userbilling->lastname,
+						'email' => $currentUserInstance->email,
+						'ecommerce_order_id' => $order->id,
+						'phoneno' => $currentUserInstance->userbilling->phoneno,
+						'address' => $currentUserInstance->userbilling->address,
+						'country' => $currentUserInstance->userbilling->country,
+						'state' => $currentUserInstance->userbilling->state,
+						'city' => $currentUserInstance->userbilling->city,
+						'postal_code' => $currentUserInstance->userbilling->postal_code,
 					]);
 				}
 
@@ -713,6 +730,68 @@ class OrderController extends BaseController
 		return false;
 	}
 
+	public function cancelOrder(Request $request, $id)    
+    {
+        try {
+            $record = EcommerceOrderDetails::find($id);
+            if(is_null($record)){
+                return JsonResponser::send(true, "Record not found", null, 400);
+            }
+            $currentUserInstance = UserMgtHelper::userInstance();
+
+			DB::beginTransaction();
+            //check order status
+            if(($record->status == OrderStatusInterface::PENDING) || ($record->status == OrderStatusInterface::PROCESSING)){
+                $record->update([
+                    'status' => OrderStatusInterface::CANCELLED,
+					'cancel_description' => $request->cancel_description,
+					'cancel_reason' => $request->cancel_reason,
+                ]); 
+
+				//send email and refund customer
+				if($record->payment_status == PaymentStatusInterface::SUCCESS && $record->ecommerceorder->payment_method == "card"){
+					if($record->ecommerceorder->payment_gateway == "Paystack"){
+						$paystackData = [
+							'transaction' => isset($record->ecommerceorder->ecommercetransaction) ? $record->ecommerceorder->ecommercetransaction->reference : "",
+							'amount' => ($record->unit_price * $record->quantity_ordered)  * 100,
+						];
+						$result = Paystack::refundTransaction($paystackData);
+						$record->update([
+                            'payment_status' => "Refund"
+						]);
+					}
+				}
+				//check if every items has been cancelled
+				$orderData = EcommerceOrderDetails::where('ecommerce_order_id', $record->ecommerce_order_id)->get();
+				if ($orderData->every(function ($order) {
+					return $order->status === OrderStatusInterface::CANCELLED;
+				})) {
+					$record->ecommerceorder->update([
+						'status' => OrderStatusInterface::CANCELLED
+					]);
+				}
+                $dataToLog = [
+                    'causer_id' => $currentUserInstance->id,
+                    'action_id' => $record->id,
+                    'action_type' => "Models\EcommerceOrderDetails",
+                    'log_name' => "Order cancelled Successfully",
+                    'action' => 'Update',
+                    'description' => "Order cancelled Successfully by {$currentUserInstance->lastname} {$currentUserInstance->firstname}",
+                ];
+    
+                ProcessAuditLog::storeAuditLog($dataToLog);
+				DB::commit();
+                return JsonResponser::send(false, 'Order has been cancelled successfully', $record, 200);
+            }
+
+            return JsonResponser::send(true, 'Your Order could not be cancelled', $record, 400);
+        } catch (\Throwable $error) {
+            logger($error);
+            DB::rollback();
+            return JsonResponser::send(true, $error->getMessage(), null, 500);
+        }
+    }
+
 	public function validateOrder($request)
 	{
 		$rules = [
@@ -946,6 +1025,36 @@ class OrderController extends BaseController
 		} catch (\Throwable $th) {
 			DB::rollBack();
 			return JsonResponser::send(true, $th->getMessage(), [], 500);
+		}
+	}
+
+	public function getUserShippingZone()
+	{
+		try {
+			$userInstance = UserMgtHelper::userInstance();
+			$userId = $userInstance->id;
+
+			$userState = isset($userInstance->usershipping) ? $userInstance->usershipping->state : optional($userInstance->usershipping)->state;
+
+			if (is_null($userState)) {
+				return JsonResponser::send(true, "Kindly update your profile information", [], 400);
+			}
+
+			$shippingZones = ShippingZone::get();
+			$shippingFee = 0;
+
+			foreach ($shippingZones as $key => $shippingZone) {
+				$stateName = $shippingZone->state_name;
+				foreach ($stateName as $state) {
+					if ($state['name'] == $userState) {
+						$shippingFee = $shippingZone['price'];
+					}
+				}
+			}
+
+			return JsonResponser::send(false, "Record found successfully", $shippingFee, 200);
+		} catch (\Throwable $error) {
+			return JsonResponser::send(true, $error->getMessage(), []);
 		}
 	}
 
