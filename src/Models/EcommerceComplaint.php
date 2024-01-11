@@ -28,4 +28,12 @@ class EcommerceComplaint extends Model
         return $this->hasMany(EcommerceComplaintStatus::class, "ecommerce_complaint_id");
     }
 
+    public function ecommerceComplaintsSupport()
+    {
+        if (class_exists("\SbscPackage\Crm\Models\EcommerceComplaintsSupport")) {
+            return $this->belongsTo(\SbscPackage\Crm\Models\EcommerceComplaintsSupport::class, "ecommerce_complaint_id");
+        }
+        return null;
+    }
+
 }
