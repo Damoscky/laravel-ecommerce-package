@@ -66,6 +66,7 @@ Route::group(["prefix" => "v1/ecommerce"], function () {
             Route::post('/all', [GuestProductController::class, 'getAllProducts']);
             Route::get('/by-categories', [GuestProductController::class, 'getProductsByCategories']);
             Route::post('/by-category/{id}', [GuestProductController::class, 'getProductsByCategoryId']);
+            Route::get('/recommended', [GuestProductController::class, 'getAllRecommendedProducts']);
             Route::get('/featured', [GuestProductController::class, 'getAllFeaturedProducts']);
             Route::get('/latest', [GuestProductController::class, 'getAllLatestProducts']);
             Route::get('/bestselling', [GuestProductController::class, 'getAllBestsellingProducts']);

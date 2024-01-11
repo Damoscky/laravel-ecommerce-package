@@ -229,6 +229,32 @@ class ProductController extends BaseController
         }
     }
 
+    public function getAllRecommendedProducts()
+    {
+        try {
+            $records = EcommerceProduct::where('is_active', true)
+            ->inRandomOrder()
+            ->take(4)
+            ->orderBy('created_at', 'DESC')
+            ->get();;
+             // Check if the user is signed in and has the product in their wishlist
+             $user = auth()->user();
+             if ($user) {
+                 foreach ($records as $record) {
+                     $wishlist = $user->userecommercewishlist()->where('ecommerce_product_id', $record->id)->exists();
+                     $record->wishlist = $wishlist;
+                 }
+             }else{
+                 $records->wishlist = false;
+             }
+            return JsonResponser::send(false, "Record found successfully", $records, 200);
+
+        } catch (\Throwable $error) {
+            logger($error);
+            return JsonResponser::send(true, $error->getMessage(), [], 500);
+        }
+    }
+
     public function getAllLatestProducts()
     {
         try {
