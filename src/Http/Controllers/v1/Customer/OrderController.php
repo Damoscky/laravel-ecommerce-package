@@ -1028,13 +1028,18 @@ class OrderController extends BaseController
 		}
 	}
 
-	public function getUserShippingZone()
+	public function getUserShippingZone(Request $request)
 	{
 		try {
 			$userInstance = UserMgtHelper::userInstance();
 			$userId = $userInstance->id;
+			$state = $request->state;
 
-			$userState = isset($userInstance->usershipping) ? $userInstance->usershipping->state : optional($userInstance->usershipping)->state;
+			if(isset($state)){
+				$userState = $request->state;
+			}else{
+				$userState = isset($userInstance->usershipping) ? $userInstance->usershipping->state : optional($userInstance->usershipping)->state;
+			}
 
 			if (is_null($userState)) {
 				return JsonResponser::send(true, "Kindly update your profile information", [], 400);
