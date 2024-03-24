@@ -17,9 +17,9 @@ class EcommerceOrder extends Model
     
     protected $with = ['ecommerceproduct'];
 
-    public function ecommerceorder()
+    public function ecommerceorderdetails()
     {
-        return $this->belongsTo(EcommerceOrder::class, 'ecommerce_order_id');
+        return $this->hasMany(EcommerceOrderDetails::class, 'ecommerce_order_id');
     }
 
     public function ecommerceproduct()

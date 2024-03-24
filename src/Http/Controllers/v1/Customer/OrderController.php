@@ -1056,8 +1056,11 @@ class OrderController extends BaseController
 					}
 				}
 			}
+			$data = [
+				'shipping_fee' => $shippingFee
+			];
 
-			return JsonResponser::send(false, "Record found successfully", $shippingFee, 200);
+			return JsonResponser::send(false, "Record found successfully", $data, 200);
 		} catch (\Throwable $error) {
 			return JsonResponser::send(true, $error->getMessage(), []);
 		}
