@@ -401,10 +401,21 @@ class ProductController extends BaseController
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(CreateProductRequest $request)
+    public function store(Request $request)
     {
         if(!auth()->user()->hasPermission('create.ecommerceproducts')){
             return JsonResponser::send(true, "Permission Denied :(", [], 401);
+        }
+
+        /**
+         * Validate Request
+         */
+        $validate = $this->validateProduct($request);
+        /**
+         * if validation fails
+         */
+        if ($validate->fails()) {
+            return JsonResponser::send(true, $validate->errors()->first(), $validate->errors()->all(), 400);
         }
 
         $currentUserInstance = UserMgtHelper::userInstance();
@@ -813,6 +824,7 @@ class ProductController extends BaseController
             return JsonResponser::send(true, 'Internal server error', null, 500);
         }
     }
+    
 
     public function declinePendingProduct($id)
     {
