@@ -18,6 +18,7 @@ class EcommerceServiceProvider extends ServiceProvider
 		$this->registerRoutes();
 		$this->registerViews();
 		$this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->registerPublishing();
 	}
 
 	protected function registerRoutes()
@@ -40,4 +41,21 @@ class EcommerceServiceProvider extends ServiceProvider
 			'middleware' => ['api'],
 		];
 	}
+
+	protected function registerPublishing()
+    {
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../config/ecommerce.php' => config_path('ecommerce.php'),
+            ], 'ecommerce-config');
+
+            $this->publishes([
+                __DIR__.'/../resources/views' => resource_path('views/vendor/ecommerce'),
+            ], 'ecommerce-views');
+
+            $this->publishes([
+                __DIR__.'/../database/migrations' => database_path('migrations'),
+            ], 'ecommerce-migrations');
+        }
+    }
 }
