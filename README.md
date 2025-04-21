@@ -1,1 +1,1 @@
-# SBSC - Ecommerce Package
+# Ecommerce Package
